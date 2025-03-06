@@ -26,7 +26,7 @@ scaling_factor = SFR_total / total_Ha_flux
 # Aplicar el reescalamiento lineal
 SFR_map = data * scaling_factor
 
-# Aplicar la transformación logarítmica para mejor visualización
+# Aplicar logarítmica 
 SFR_map_log = np.log10(1 + SFR_map)  
 
 # Verificar que la suma total sigue siendo 500 Msun/yr
@@ -35,7 +35,7 @@ SFR_check = np.sum(SFR_map)
 print(f"Factor de escalamiento: {scaling_factor}")
 print(f"Verificación SFR total: {SFR_check} Msun/yr")
 
-# Mostrar la imagen con escala logarítmica
+# Mostrar imagen 
 plt.imshow(SFR_map_log, origin="lower", cmap="inferno")
 plt.colorbar(label="log10(1 + SFR) [Msun/yr per pixel]")
 plt.title("Mapa de Formación Estelar (Escala Logarítmica)")
