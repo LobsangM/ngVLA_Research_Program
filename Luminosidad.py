@@ -56,25 +56,29 @@ def luminosity_to_flux(lum_1_4GHz, z, alpha):
 
     D_L = cosmo.luminosity_distance(z).to('cm').value
 
-    factor = (4 * np.pi * D_L * z**2) / ((1+z)**(1-alpha) * (1.4/10)**(-alpha))
+    factor = (4 * np.pi * D_L**2) / ((1+z)**(1-alpha) * (1.4/10)**(-alpha))
     S_10GHz = lum_1_4GHz / factor
 
     return S_10GHz
 
+D_l = cosmo.luminosity_distance(1.5).to('cm').value
+print(f"Distancia de luminosidad a z=4: {D_l:.2e} cm")
 
-
-flujo_total = np.sum(luminosity_to_flux(lum_1_4GHz, 1, alpha))
+# Sumamos los valores para obtener la densidad de flujo total
+flujo_total = np.sum(luminosity_to_flux(lum_1_4GHz, 4, alpha))
 print(f"Densidad de flujo total a 10 GHz: {flujo_total} erg/s/cm^2/Hz")
+
+# Convertir de erg/s/cm^2/Hz a Jy
+flujo_total_jy = flujo_total * 1e23
+print(f"Densidad de flujo total a 10 GHz: {flujo_total_jy:.2e} Jy")
 
 
 # #Le aplicamos el reescalamiento logaritmico a los nuevos datos
-
-factor_flux = 500 / np.sum(lum_data)
-S_10GHz_map = factor_flux * luminosity_to_flux(lum_1_4GHz, 1, alpha)
+S_10GHz_map = luminosity_to_flux(lum_1_4GHz, 1.5, alpha)
 S_10GHz_log = np.log10(1 + S_10GHz_map)
 
 #Grafica con diferentes redshifts
-plt.imshow(S_10GHz_log, origin='lower', cmap='inferno', norm=LogNorm(vmin=1e-5, vmax=1e-3))
+plt.imshow(S_10GHz_log, origin='lower', cmap='inferno', norm=LogNorm(vmin=1e-5, vmax=1e-1))
 plt.colorbar(label="Densidad de flujo [erg/s/cm^2/Hz]")
 plt.title("Densidad de Flujo a 10 GHz para z=4")
 plt.show()
