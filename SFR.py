@@ -15,6 +15,8 @@ hdul.close()
 # Suma total de H_alpha
 total_Ha_flux = np.sum(data)
 
+print(total_Ha_flux)
+
 # Máximo
 max_Ha_flux = np.max(data)
 
