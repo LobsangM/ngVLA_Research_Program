@@ -1,5 +1,5 @@
-fitsimage         = 'ngc6946Ha_I_Ha_ksb2004.fits'
-imagename         = 'ngc6946'
+fitsimage         = 'imagen_z2.fits'
+imagename         = 'imagen_z2'
 whichrep          = 0
 whichhdu          = -1
 zeroblanks        = True
@@ -7,4 +7,4 @@ overwrite         = False
 defaultaxes       = False
 defaultaxesvalues = []
 beam              = []
-#importfits( fitsimage='ngc6946Ha_I_Ha_ksb2004.fits',imagename='ngc6946',whichrep=0,whichhdu=-1,zeroblanks=True,overwrite=False,defaultaxes=False,defaultaxesvalues=[],beam=[] )
+#importfits( fitsimage='imagen_z2.fits',imagename='imagen_z2',whichrep=0,whichhdu=-1,zeroblanks=True,overwrite=False,defaultaxes=False,defaultaxesvalues=[],beam=[] )
