@@ -1,10 +1,10 @@
-fitsimage         = 'imagen_z2.fits'
-imagename         = 'imagen_z2'
+fitsimage         = 'convolucion_0.05arcsec.fits'
+imagename         = 'convolucion_0.05arcsec.image'
 whichrep          = 0
 whichhdu          = -1
 zeroblanks        = True
-overwrite         = False
+overwrite         = True
 defaultaxes       = False
 defaultaxesvalues = []
 beam              = []
-#importfits( fitsimage='imagen_z2.fits',imagename='imagen_z2',whichrep=0,whichhdu=-1,zeroblanks=True,overwrite=False,defaultaxes=False,defaultaxesvalues=[],beam=[] )
+#importfits( fitsimage='convolucion_0.05arcsec.fits',imagename='convolucion_0.05arcsec.image',whichrep=0,whichhdu=-1,zeroblanks=True,overwrite=True,defaultaxes=False,defaultaxesvalues=[],beam=[] )

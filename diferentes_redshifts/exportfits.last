@@ -1,0 +1,13 @@
+imagename  = 'z01_005_arcsec_casa//'
+fitsimage  = 'z01_005arcsec.fits'
+velocity   = False
+optical    = False
+bitpix     = -32
+minpix     = 0
+maxpix     = -1
+overwrite  = False
+dropstokes = False
+stokeslast = True
+history    = True
+dropdeg    = False
+#exportfits( imagename='z01_005_arcsec_casa//',fitsimage='z01_005arcsec.fits',velocity=False,optical=False,bitpix=-32,minpix=0,maxpix=-1,overwrite=False,dropstokes=False,stokeslast=True,history=True,dropdeg=False )

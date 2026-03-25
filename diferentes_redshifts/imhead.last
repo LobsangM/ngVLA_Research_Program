@@ -1,0 +1,6 @@
+imagename = 'flux_z01_casa'
+mode      = 'list'
+hdkey     = ''
+hdvalue   = ''
+verbose   = False
+#imhead( imagename='flux_z01_casa',mode='list',hdkey='',hdvalue='',verbose=False )

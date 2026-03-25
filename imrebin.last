@@ -1,0 +1,13 @@
+imagename = 'convolucion_0.05arcsec.image'
+outfile   = 'convolucion_0.05arcsec_rebin.image'
+factor    = [23, 23]
+region    = ''
+box       = ''
+chans     = ''
+stokes    = ''
+mask      = ''
+dropdeg   = False
+overwrite = False
+crop      = True
+stretch   = False
+#imrebin( imagename='convolucion_0.05arcsec.image',outfile='convolucion_0.05arcsec_rebin.image',factor=[23, 23],region='',box='',chans='',stokes='',mask='',dropdeg=False,overwrite=False,crop=True,stretch=False )

@@ -1,12 +1,12 @@
-imagename = 'CASA_images/imagen_z05/'
+imagename = 'temp_1.image'
 kernel    = 'gauss'
 region    = ''
 box       = ''
 chans     = ''
 stokes    = ''
 mask      = ''
-outfile   = 'imagen_005arcsec_z05'
-overwrite = False
+outfile   = 'temp_1_smooth.image'
+overwrite = True
 major     = '0.05arcsec'
 minor     = '0.05arcsec'
 pa        = '0deg'
@@ -15,4 +15,4 @@ kimage    = ''
 scale     = -1.0
 stretch   = False
 beam      = ''
-#imsmooth( imagename='CASA_images/imagen_z05/',kernel='gauss',region='',box='',chans='',stokes='',mask='',outfile='imagen_005arcsec_z05',overwrite=False,major='0.05arcsec',minor='0.05arcsec',pa='0deg',targetres=False,kimage='',scale=-1.0,stretch=False,beam='' )
+#imsmooth( imagename='temp_1.image',kernel='gauss',region='',box='',chans='',stokes='',mask='',outfile='temp_1_smooth.image',overwrite=True,major='0.05arcsec',minor='0.05arcsec',pa='0deg',targetres=False,kimage='',scale=-1.0,stretch=False,beam='' )

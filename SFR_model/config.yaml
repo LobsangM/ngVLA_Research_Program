@@ -1,0 +1,17 @@
+cosmology:
+  H0: 70
+  Om0: 0.3
+  Tcmb0: 2.725
+
+image:
+  fits_file: "ngc6946Ha_I_Ha_ksb2004.fits"
+  crop_size: 10
+
+sfr:
+  total_sfr: 100
+
+radio:
+  alpha: 0.7
+  redshift: 1
+  obs_frequency: 10
+  rest_frequency: 1.4
