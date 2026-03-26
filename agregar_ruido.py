@@ -6,7 +6,7 @@ archivo_input = "convolucion_0.05arcsec_rebin.fits"
 archivo_output = "convolucion_0.05arcsec_rebin_ruido.fits"
 
 # ruido
-sigma_ruido = 1e-36   # 
+sigma_ruido = 1e-13   #dimensional : Jy
 
 print("Agregando ruido gaussiano")
 print("sigma =", sigma_ruido, "Jy")

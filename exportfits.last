@@ -1,5 +1,5 @@
-imagename  = 'temp_1_smooth.image'
-fitsimage  = 'convolucion_0.05arcsec.fits'
+imagename  = 'convolucion_0.05arcsec_rebin.image'
+fitsimage  = 'convolucion_0.05arcsec_rebin.fits'
 velocity   = False
 optical    = False
 bitpix     = -32
@@ -10,4 +10,4 @@ dropstokes = False
 stokeslast = True
 history    = True
 dropdeg    = False
-#exportfits( imagename='temp_1_smooth.image',fitsimage='convolucion_0.05arcsec.fits',velocity=False,optical=False,bitpix=-32,minpix=0,maxpix=-1,overwrite=True,dropstokes=False,stokeslast=True,history=True,dropdeg=False )
+#exportfits( imagename='convolucion_0.05arcsec_rebin.image',fitsimage='convolucion_0.05arcsec_rebin.fits',velocity=False,optical=False,bitpix=-32,minpix=0,maxpix=-1,overwrite=True,dropstokes=False,stokeslast=True,history=True,dropdeg=False )
