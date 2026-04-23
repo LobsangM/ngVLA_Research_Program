@@ -1,5 +1,5 @@
-fitsimage         = 'convolucion_0.05arcsec.fits'
-imagename         = 'convolucion_0.05arcsec.image'
+fitsimage         = 'mapa_z1_10kpc_SFR100.fits'
+imagename         = 'temp_1.image'
 whichrep          = 0
 whichhdu          = -1
 zeroblanks        = True
@@ -7,4 +7,4 @@ overwrite         = True
 defaultaxes       = False
 defaultaxesvalues = []
 beam              = []
-#importfits( fitsimage='convolucion_0.05arcsec.fits',imagename='convolucion_0.05arcsec.image',whichrep=0,whichhdu=-1,zeroblanks=True,overwrite=True,defaultaxes=False,defaultaxesvalues=[],beam=[] )
+#importfits( fitsimage='mapa_z1_10kpc_SFR100.fits',imagename='temp_1.image',whichrep=0,whichhdu=-1,zeroblanks=True,overwrite=True,defaultaxes=False,defaultaxesvalues=[],beam=[] )
