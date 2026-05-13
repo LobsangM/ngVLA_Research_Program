@@ -1,12 +1,15 @@
 # name: sfr_model_CASA.py
 # date: 25-03-2026
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import fits
 from matplotlib.colors import LogNorm
 from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u
+from casatasks import importfits, imsmooth, exportfits
+
 
 
 # CONFIG
@@ -20,7 +23,7 @@ config = {
 
     "image": {
         "fits_file": "ngc6946Ha_I_Ha_ksb2004.fits",
-        "crop_size": 10
+        "crop_size": 30 #probar con 30kpc
     },
 
     "sfr": {
@@ -128,11 +131,11 @@ class SFRRadioModel:
 
         plt.imshow(self.flux_map, origin="lower",
                    cmap="inferno", norm=LogNorm(vmin=1e-35, vmax=1e-32))
-        plt.colorbar(label="Flux Density [erg/s/cm^2/Hz]")
-        plt.title("Flux Map z=%s" % self.config["radio"]["redshift"])
-        plt.xlim(350, 2450)
-        plt.ylim(500, 2650)
-        plt.show()
+        #plt.colorbar(label="Flux Density [erg/s/cm^2/Hz]")
+        #plt.title("Flux Map z=%s" % self.config["radio"]["redshift"])
+        #plt.xlim(350, 2450)
+        #plt.ylim(500, 2650)
+        #plt.show()
 
     # -------------------------------------------------
     def print_statistics(self):
@@ -215,7 +218,13 @@ class SFRRadioModel:
 
         header['COMMENT'] = "Simulacion z=%s, %s kpc x %s kpc" % (z, tamano_fisico_kpc, tamano_fisico_kpc)
 
-        output_name = "mapa_z%s_%skpc_SFR%s.fits" % (z, tamano_fisico_kpc, total_sfr)
+        folder = self.config.get("output_folder", ".")
+        os.makedirs(folder, exist_ok=True)
+
+        output_name = os.path.join(
+            folder,
+            "mapa_z%s_%skpc_SFR%s.fits" % (z, tamano_fisico_kpc, total_sfr)
+        )
 
         hdu.writeto(output_name, overwrite=True)
 
@@ -241,7 +250,14 @@ class SFRRadioModel:
 
         # quitar el nombre para el label
         beam_label = major.replace(" ", "")
-        output_fits = "convolucion_%s.fits" % beam_label
+        
+        folder = self.config.get("output_folder", ".")
+        os.makedirs(folder, exist_ok=True)
+
+        output_fits = os.path.join(
+            folder,
+            "convolucion_%s.fits" % beam_label
+        )
 
         print("Convolución:")
         print("Beam mayor:", major)
@@ -269,6 +285,8 @@ class SFRRadioModel:
         print("Archivo final:", output_fits)
 
 # MAIN
+
+
 
 model = SFRRadioModel(config)
 
