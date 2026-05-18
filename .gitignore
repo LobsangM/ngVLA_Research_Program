@@ -1,1 +1,11 @@
 venv310/
+
+# Archivos de datos grandes (outputs reproducibles)
+*.fits
+*.image
+*.last
+__pycache__/
+
+# Excepciones: imágenes de entrada que sí se versionan
+!ngc6946Ha_I_Ha_ksb2004.fits
+!SINGS/imagenes_Ha/*.fits

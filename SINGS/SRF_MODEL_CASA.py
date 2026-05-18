@@ -265,17 +265,19 @@ class SFRRadioModel:
 
 # MAIN
 
-for galaxia in galaxias:
-    print("\n" + "=" * 45)
-    print("Procesando: %s" % galaxia)
-    print("=" * 45)
+if __name__ == "__main__":
+    for galaxia in galaxias:
+        print("\n" + "=" * 45)
+        print("Procesando: %s" % galaxia)
+        print("=" * 45)
 
-    config = get_config(galaxia)
-    model = SFRRadioModel(config)
+        config = get_config(galaxia)
+        model = SFRRadioModel(config)
 
-    model.luminosity_to_flux()
-    model.plot_sfr()
-    model.plot_flux()
-    model.print_statistics()
-    model.add_wcs_and_save()
-    model.casa_convolution()
+        model.luminosity_to_flux()
+        model.plot_sfr()
+        model.plot_flux()
+        model.print_statistics()
+        model.save_flux_to_fits()
+        model.add_wcs_and_save()
+        model.casa_convolution()
