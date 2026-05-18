@@ -1,0 +1,9 @@
+numpy==1.26.4
+matplotlib==3.9.4
+astropy==6.0.1
+scipy==1.13.1
+APLpy==2.2.0
+PyYAML==6.0.2
+tomli==2.4.1
+casatasks==6.7.0.31
+casatools==6.7.0.31
