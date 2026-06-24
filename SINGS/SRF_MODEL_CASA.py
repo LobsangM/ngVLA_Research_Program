@@ -12,7 +12,7 @@ from matplotlib.colors import LogNorm
 from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u
 from casatasks import importfits, imsmooth, exportfits
-from utils import get_config, galaxias
+from utils import get_config, galaxias, REDSHIFT_SFR_TABLE
 
 
 # -----------------
@@ -266,18 +266,22 @@ class SFRRadioModel:
 # MAIN
 
 if __name__ == "__main__":
-    for galaxia in galaxias:
-        print("\n" + "=" * 45)
-        print("Procesando: %s" % galaxia)
-        print("=" * 45)
+    for entry in REDSHIFT_SFR_TABLE:
+        z     = entry["redshift"]
+        sfr   = entry["sfr"]
+        label = entry["label"]
 
-        config = get_config(galaxia)
-        model = SFRRadioModel(config)
+        print(f"\n{'='*55}")
+        print(f"  z={z}  SFR={sfr} M☉/yr  [{label}]  ({len(galaxias)} galaxias)")
+        print(f"{'='*55}")
 
-        model.luminosity_to_flux()
-        model.plot_sfr()
-        model.plot_flux()
-        model.print_statistics()
-        model.save_flux_to_fits()
-        model.add_wcs_and_save()
-        model.casa_convolution()
+        for galaxia in galaxias:
+            print(f"\n  → {galaxia}")
+
+            config = get_config(galaxia, redshift=z, sfr=sfr, label=label)
+            model  = SFRRadioModel(config)
+            model.luminosity_to_flux()
+            model.print_statistics()
+            model.add_wcs_and_save()
+
+    print("\nTodos los mapas base generados.")

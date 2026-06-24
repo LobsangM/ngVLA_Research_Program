@@ -10,11 +10,26 @@ TOML_PATH = BASE_DIR / "tomls" / "Ha_SUB.toml"
 with open(TOML_PATH, "rb") as f:
     toml_data = tomllib.load(f)
 
-galaxias = toml_data["galaxias"]["galaxias"]
 sufijo   = toml_data["galaxias"]["archivo_sufijo"]
 
+# Solo galaxias con FITS disponible en imagenes_Ha/
+galaxias = [
+    g for g in toml_data["galaxias"]["galaxias"]
+    if (BASE_DIR / "imagenes_Ha" / f"{g}{sufijo}").exists()
+]
 
-def get_config(galaxia):
+# Tabla de redshift y SFR típico de la Secuencia Principal
+# basada en Leslie et al. (2020), para M* = 1e10 M_sun
+REDSHIFT_SFR_TABLE = [
+    {"redshift": 0.4, "sfr": 1.5, "label": "z0.4"},
+    {"redshift": 1.0, "sfr":   7, "label": "z1.0"},
+    {"redshift": 2.0, "sfr":  40, "label": "z2.0"},
+    {"redshift": 3.0, "sfr": 100, "label": "z3.0"},
+    {"redshift": 5.0, "sfr": 300, "label": "z5.0"},
+]
+
+
+def get_config(galaxia, redshift=1.0, sfr=7, label="z1.0"):
     fits_file = str(BASE_DIR / "imagenes_Ha" / f"{galaxia}{sufijo}")
     return {
         "cosmology": {
@@ -24,20 +39,20 @@ def get_config(galaxia):
         },
         "image": {
             "fits_file": fits_file,
-            "crop_size": 30  # en kpc
+            "crop_size": 30
         },
         "sfr": {
-            "total_sfr": 100
+            "total_sfr": sfr
         },
         "radio": {
             "alpha": 0.7,
-            "redshift": 1,
+            "redshift": redshift,
             "obs_frequency": 10,
             "rest_frequency": 1.4,
             "beam_major": "0.05arcsec",
             "beam_minor": "0.05arcsec",
             "beam_pa": "0deg"
         },
-        "output_folder": str(BASE_DIR / "resultados" / galaxia),
+        "output_folder": str(BASE_DIR / "resultados" / label / galaxia),
         "galaxia": galaxia
     }

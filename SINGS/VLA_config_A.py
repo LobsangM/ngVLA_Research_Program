@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import aplpy
 from casatasks import importfits, imsmooth, exportfits
 
-from utils import galaxias
+from utils import galaxias, REDSHIFT_SFR_TABLE
 
 
 #Ruido correlacionado
@@ -168,27 +168,34 @@ beam      = 0.293
 noise_uJy = 0.56
 beam_str  = "%sarcsec" % beam
 
-output_dir = "VLA_config_A"
-os.makedirs(output_dir, exist_ok=True)
+for entry in REDSHIFT_SFR_TABLE:
+    z     = entry["redshift"]
+    sfr   = entry["sfr"]
+    label = entry["label"]
 
-for galaxia in galaxias:
-    print("\n" + "=" * 45)
-    print("Procesando VLA-A: %s" % galaxia)
-    print("=" * 45)
+    output_dir = os.path.join("VLA_config_A", label)
+    os.makedirs(output_dir, exist_ok=True)
 
-    input_fits  = os.path.join("resultados", galaxia, "mapa_z1_30kpc_SFR100.fits")
-    casa_image  = "temp_vla_a.image"
-    smooth_image = "temp_vla_a_smooth.image"
-    vla_fits    = os.path.join(output_dir, "VLA_A_%s.fits" % galaxia)
+    print(f"\n{'='*55}")
+    print(f"  VLA-A  z={z}  SFR={sfr} M☉/yr  [{label}]")
+    print(f"{'='*55}")
 
-    # FITS → CASA → convolución → FITS
-    importfits(fitsimage=input_fits, imagename=casa_image, overwrite=True)
-    imsmooth(imagename=casa_image, kernel="gauss",
-             major=beam_str, minor=beam_str, pa="0deg",
-             outfile=smooth_image, overwrite=True)
-    exportfits(imagename=smooth_image, fitsimage=vla_fits, overwrite=True)
+    for galaxia in galaxias:
+        print(f"\n  → {galaxia}")
 
-    final_fits = add_correlated_noise(vla_fits, beam, noise_uJy)
-    #plot_with_beam(final_fits)
+        input_fits   = os.path.join("resultados", label, galaxia,
+                                    f"mapa_z{z}_30kpc_SFR{sfr}.fits")
+        casa_image   = "temp_vla_a.image"
+        smooth_image = "temp_vla_a_smooth.image"
+        vla_fits     = os.path.join(output_dir, f"VLA_A_{galaxia}.fits")
 
-print("\nSimulación VLA A terminada.")
+        importfits(fitsimage=input_fits, imagename=casa_image, overwrite=True)
+        imsmooth(imagename=casa_image, kernel="gauss",
+                 major=beam_str, minor=beam_str, pa="0deg",
+                 outfile=smooth_image, overwrite=True)
+        exportfits(imagename=smooth_image, fitsimage=vla_fits, overwrite=True)
+
+        final_fits = add_correlated_noise(vla_fits, beam, noise_uJy)
+        plot_with_beam(final_fits)
+
+print("\nSimulaciones VLA A terminadas.")
