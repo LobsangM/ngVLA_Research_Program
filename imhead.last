@@ -1,6 +1,0 @@
-imagename = 'convolucion_0.05arcsec.image'
-mode      = 'summary'
-hdkey     = ''
-hdvalue   = ''
-verbose   = False
-#imhead( imagename='convolucion_0.05arcsec.image',mode='summary',hdkey='',hdvalue='',verbose=False )

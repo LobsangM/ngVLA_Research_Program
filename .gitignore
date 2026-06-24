@@ -1,4 +1,5 @@
 venv310/
+.claude/
 
 # Archivos de datos grandes (outputs reproducibles)
 *.fits
