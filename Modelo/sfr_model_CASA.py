@@ -41,7 +41,6 @@ config = {
 }
 
 # Tabla de redshift y SFR típico de la Secuencia Principal
-# basada en Leslie et al. (2020), para M* = 1e10 M_sun
 REDSHIFT_SFR_TABLE = [
     {"redshift": 0.4, "sfr": 1.5, "label": "z0.4"},
     {"redshift": 1.0, "sfr":   7, "label": "z1.0"},
@@ -315,9 +314,13 @@ if __name__ == "__main__":
 
         # guardar imagen del mapa de flujo
         folder = cfg["output_folder"]
+        flux_pos = model.flux_map[model.flux_map > 0]
+        vmin = np.nanpercentile(flux_pos, 1)
+        vmax = np.nanmax(flux_pos)
+
         plt.figure(figsize=(6, 6))
         plt.imshow(model.flux_map, origin="lower",
-                   cmap="inferno", norm=LogNorm(vmin=1e-35, vmax=1e-32))
+                   cmap="inferno", norm=LogNorm(vmin=vmin, vmax=vmax))
         plt.colorbar(label="Flux density [erg/s/cm²/Hz]")
         plt.title(f"Flux map  z={z}  SFR={sfr} M☉/yr")
         plt.tight_layout()
