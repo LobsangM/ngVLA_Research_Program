@@ -10,14 +10,15 @@ Radio astronomy simulation pipeline that predicts how SINGS (Spitzer Infrared Ne
 
 Scripts must be run **from within their own directory** because they use relative paths for FITS files.
 
-**Single-galaxy prototype (root directory):**
+**Single-galaxy prototype (`Modelo/`):**
 ```bash
-cd /path/to/ResearchP_ngVLA
-python sfr_model_CASA.py        # generates mapa_z1_30kpc_SFR100.fits and convolution
+cd Modelo
+python sfr_model_CASA.py        # generates convolution for NGC 6946 (mapa_base)
 python ngVLA_config_A.py        # simulate ngVLA-A observation + noise
 python ngVLA_config_B.py        # simulate ngVLA-B observation + noise
 python VLA_config_A.py          # simulate VLA-A observation + noise
 python VLA_config_B.py          # simulate VLA-B observation + noise
+python config_main.py           # orchestrator: runs all four telescope scripts sequentially
 ```
 
 **SINGS batch pipeline (52 galaxies):**
@@ -31,15 +32,9 @@ python VLA_config_B.py          # step 2d: convolve + noise, VLA-B config
 python preview_Ha.py            # optional: generate PNG previews + collage of raw Hα inputs
 ```
 
-**Refactored standalone model (YAML config):**
-```bash
-cd SFR_model
-python main.py                  # reads config.yaml — NOTE: main.py has a broken import (see Known Issues)
-```
-
 **CASA image rebinning (run inside CASA environment):**
 ```bash
-# rebin_beam_sampling.py contains CASA task calls (importfits, imrebin, exportfits)
+# Modelo/rebin_beam_sampling.py contains CASA task calls (importfits, imrebin, exportfits)
 # Must be executed via: casa --nogui -c rebin_beam_sampling.py
 ```
 
@@ -47,7 +42,7 @@ python main.py                  # reads config.yaml — NOTE: main.py has a brok
 
 - Python 3.10 virtual environment: `venv310/`
 - Activate: `source venv310/bin/activate`
-- Key packages: `numpy`, `astropy`, `matplotlib`, `scipy`, `aplpy`, `tomli`, `yaml`
+- Key packages: `numpy`, `astropy`, `matplotlib`, `scipy`, `aplpy`, `tomli`
 - **CASA dependency**: Scripts that convolve images require `casatasks` (from CASA 6+). These scripts call `importfits`, `imsmooth`, `exportfits` — they will fail outside a CASA Python environment.
 
 ## Architecture
@@ -72,7 +67,7 @@ Output: *_noise.fits  +  *_noise.png
 - Observing frequency: 10 GHz (ngVLA band); rest frequency: 1.4 GHz
 - Flux: `F = L / (4π D_L² · (1+z)^(1-α) · (ν_rest/ν_obs)^(-α))`
 - Correlated noise: white noise convolved with Gaussian kernel sized to match beam FWHM
-- `crop_size` is 30 kpc in the SINGS batch pipeline and 10 kpc in the `SFR_model/` prototype
+- `crop_size` is 30 kpc in both `Modelo/` and `SINGS/`
 
 ### Telescope configurations
 
@@ -87,14 +82,14 @@ Output: *_noise.fits  +  *_noise.png
 
 ```
 ResearchP_ngVLA/
-├── sfr_model_CASA.py          # single-galaxy pipeline (root prototype)
-├── ngVLA_config_{A,B}.py      # root-level telescope simulations
-├── VLA_config_{A,B}.py
-├── rebin_beam_sampling.py     # CASA pixel rebinning script
-├── SFR_model/
-│   ├── main.py                # entry point using config.yaml
-│   ├── sfr_model.py           # SFRRadioModel class (YAML-based version)
-│   └── config.yaml            # cosmology / image / sfr / radio params
+├── Modelo/
+│   ├── sfr_model_CASA.py          # SFRRadioModel class + single-galaxy run (NGC 6946)
+│   ├── ngVLA_config_{A,B}.py      # telescope simulations (import sfr_model_CASA)
+│   ├── VLA_config_{A,B}.py
+│   ├── config_main.py             # orchestrator: runs all four telescope scripts
+│   ├── rebin_beam_sampling.py     # CASA pixel rebinning (run via casa --nogui)
+│   ├── ngc6946Ha_I_Ha_ksb2004.fits  # input FITS for single-galaxy prototype
+│   └── resultados/                # output per telescope config
 └── SINGS/
     ├── SRF_MODEL_CASA.py      # batch pipeline, iterates all galaxias
     ├── utils.py               # loads TOML → galaxias list + get_config()
@@ -106,36 +101,29 @@ ResearchP_ngVLA/
     ├── VLA_config_{A,B}.py
     ├── preview_Ha.py          # generates individual PNGs + collage of raw Hα inputs → imagenes_png/
     ├── imagenes_Ha/           # input: *_HA_SUB_dr4.fits per galaxy
-    ├── imagenes_MIPS70/       # input: *_mips70_image_v5-0.fits
-    ├── imagenes_MIPS160/      # input: *_mips160_image_v5-0.fits
     ├── imagenes_png/          # output of preview_Ha.py: {galaxy}.png + collage_Ha_{cmap}.png
     ├── mapas_SFR100/          # intermediate: mapa_SFR100_{galaxy}.fits (save_flux_to_fits)
     ├── resultados/{galaxy}/   # intermediate: mapa_z1_30kpc_SFR100.fits (add_wcs_and_save)
-    ├── ngVLA_config_A/        # output: {TelescopeConfig}_{galaxy}.fits + _noise.fits + .png
+    ├── ngVLA_config_A/        # output: convolucion_{beam}arcsec_{galaxy}_noise.fits + .png
     ├── ngVLA_config_B/
     ├── VLA_config_A/
     ├── VLA_config_B/
     └── Convoluciones/         # convolved images: convolucion_0.05arcsec_{galaxy}.fits
 ```
 
-### Switching photometric bands
-
-The active band is controlled by `TOML_PATH` in `SINGS/utils.py`. Change the import to use `MIPS70.toml` or `MIPS160.toml` instead of `Ha_SUB.toml`, then update `imagenes_Ha/` references in `get_config()` to the correct image folder and file suffix.
-
 ### SFRRadioModel class (two versions)
 
-Both `sfr_model_CASA.py` (root) and `SINGS/SRF_MODEL_CASA.py` define a `SFRRadioModel` class. The SINGS version adds per-galaxy config via `get_config()` and writes outputs to `resultados/{galaxy}/`. The `SFR_model/sfr_model.py` is an older YAML-based variant that does not include CASA convolution.
+Both `Modelo/sfr_model_CASA.py` and `SINGS/SRF_MODEL_CASA.py` define `SFRRadioModel`. The `Modelo/` version uses a single hardcoded config dict and NGC 6946 as input. The SINGS version adds per-galaxy config via `get_config()` (from `utils.py`) and writes outputs to `resultados/{galaxy}/`. The `Modelo/` telescope scripts import `SFRRadioModel` and `config` directly from `sfr_model_CASA` in the same directory.
 
-### Code duplication in SINGS telescope config scripts
+### Switching photometric bands
 
-`add_correlated_noise` and `plot_with_beam` are copy-pasted verbatim into all four SINGS telescope scripts (`ngVLA_config_{A,B}.py`, `VLA_config_{A,B}.py`). They are not shared via a module. Changes to the noise model or plot style must be applied to all four files.
+The active band is controlled by `TOML_PATH` in `SINGS/utils.py`. Change it to `MIPS70.toml` or `MIPS160.toml` instead of `Ha_SUB.toml`, then update the `imagenes_Ha/` path and file suffix in `get_config()`.
 
-### Root-level experiment scripts
+### Code duplication in telescope config scripts
 
-`agregar_ruido.py`, `ruido_correlacionado.py`, and `ruido_por_cuadrante.py` are standalone one-off experiments used during early development (operate on `convolucion_0.05arcsec_rebin.fits`). They are not part of the active pipeline. `SFR_model/suavizado.py` is a one-off WCS header utility that patches an existing FITS file with kpc-based pixel scale.
+`add_correlated_noise` and `plot_with_beam` are copy-pasted verbatim into all four `Modelo/` telescope scripts and all four `SINGS/` telescope scripts. Changes to the noise model or plot style must be applied to all eight files.
 
 ### Known issues
 
-- **`SFR_model/main.py` has a broken import**: it does `from rebin_beam_sampling import SFRRadioModel` but `rebin_beam_sampling.py` does not define `SFRRadioModel`. The correct import should be `from sfr_model import SFRRadioModel`.
-- **CASA temp directories**: `SRF_MODEL_CASA.py` and the telescope scripts leave behind `temp_*.image` and `temp_*_smooth.image` CASA directories in `SINGS/`. These are safe to delete after a run.
-- The noise units differ between scripts: ngVLA configs pass noise in **nJy** (`noise_nJy * 1e-9`) while VLA configs pass noise in **µJy** (`noise_uJy * 1e-6`). The function signatures differ accordingly — `add_correlated_noise` is not interchangeable across the four scripts despite looking identical.
+- **CASA temp directories**: `SRF_MODEL_CASA.py` and the telescope scripts leave behind `temp_*.image` and `temp_*_smooth.image` CASA directories. These are safe to delete after a run.
+- **Noise units differ**: ngVLA configs pass noise in **nJy** (`noise_nJy * 1e-9`) while VLA configs pass noise in **µJy** (`noise_uJy * 1e-6`). The `add_correlated_noise` signatures differ accordingly — they are not interchangeable despite looking identical.

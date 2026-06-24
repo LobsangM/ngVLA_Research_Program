@@ -1,0 +1,383 @@
+\documentclass[12pt, a4paper]{article}
+
+% ─── Paquetes ───────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% ─── Geometría ──────────────────────────────────────────────────────────────
+\geometry{top=2.5cm, bottom=2.5cm, left=3cm, right=3cm}
+
+% ─── Colores ────────────────────────────────────────────────────────────────
+\definecolor{azulcosmos}{RGB}{30, 90, 160}
+\definecolor{rojoestrella}{RGB}{180, 40, 40}
+\definecolor{grisclaro}{RGB}{240, 240, 245}
+
+% ─── Encabezado y pie de página ─────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\textcolor{azulcosmos}{\small Leslie et al.\ (2020)}}
+\lhead{\textcolor{azulcosmos}{\small VLA-COSMOS 3\,GHz}}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+
+% ─── Títulos de secciones ───────────────────────────────────────────────────
+\titleformat{\section}{\large\bfseries\color{azulcosmos}}{}{0em}{}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries\color{rojoestrella}}{}{0em}{}
+
+% ─── Documento ──────────────────────────────────────────────────────────────
+\begin{document}
+
+% ── Portada ─────────────────────────────────────────────────────────────────
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    {\color{azulcosmos}\rule{\linewidth}{1.5pt}}\\[0.4cm]
+    {\LARGE\bfseries\color{azulcosmos}
+        Resumen del Paper Científico}\\[0.3cm]
+    {\large\bfseries
+        The VLA-COSMOS 3\,GHz Large Project:\\[0.2cm]
+        Evolution of Specific Star Formation Rates\\
+        out to $z \sim 5$}\\[0.3cm]
+    {\color{azulcosmos}\rule{\linewidth}{1.5pt}}\\[1.0cm]
+    {\large Sarah K.\ Leslie et al.\ (2020)}\\[0.2cm]
+    {\normalsize \textit{The Astrophysical Journal}, 899, 58}\\[2cm]
+    {\normalsize Resumen - prácticas}\\[0.5cm]
+    {\normalsize \today}
+    \vfill
+\end{titlepage}
+
+% ── Índice ───────────────────────────────────────────────────────────────────
+\tableofcontents
+\newpage
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Contexto y Motivación}
+% ════════════════════════════════════════════════════════════════════════════
+
+La \textbf{tasa de formación estelar cósmica} (\textit{Star Formation Rate Density}, SFRD)
+es una de las cantidades fundamentales en la evolución de galaxias. Observaciones acumuladas
+durante décadas indican que no es constante: alcanzó su máximo alrededor de
+$z \sim 2$ (hace $\approx 10{,}000$ millones de años, conocida como el
+\textit{``cosmic noon''}) y desde entonces ha declinado en más de un orden de magnitud.
+
+Las medidas tradicionales de SFR usan la luz ultravioleta (UV) o el infrarrojo (IR),
+pero ambas requieren correcciones por polvo interestelar que pueden ser inciertas,
+especialmente a alto redshift ($z > 4$). El \textbf{radio-continuo} a frecuencias
+$\lesssim 20$\,GHz ofrece una alternativa \textit{libre de polvo}: la emisión
+sincrotrón de remanentes de supernovas traza directamente la formación estelar
+reciente (escala de tiempo 0--100\,Myr) sin ser atenuada.
+
+Este paper aprovecha el sondeo \textbf{VLA-COSMOS 3\,GHz Large Project} para
+medir de forma uniforme y coherente la secuencia principal (MS) de galaxias
+star-forming y su evolución hasta $z \sim 5$.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Datos Utilizados}
+% ════════════════════════════════════════════════════════════════════════════
+
+\subsection{Datos de Radio}
+El \textbf{VLA-COSMOS 3\,GHz Large Project} (Smol\v{c}i\'c et al.\ 2017) observó
+el campo COSMOS durante 384 horas con el VLA en banda S (centrada en 3\,GHz,
+ancho de banda 2048\,MHz). Las características principales son:
+
+\begin{itemize}[leftmargin=2em]
+    \item Resolución angular: $0\farcs75$ (FWHM).
+    \item Ruido rms medio: $2.3\,\mu\text{Jy/beam}$.
+    \item Área cubierta: $2.6\,\text{deg}^2$; para el apilamiento se usaron
+          $1.55\,\text{deg}^2$ (rms $< 3\,\mu$Jy/beam).
+    \item 10\,830 fuentes detectadas a $> 5\sigma$.
+\end{itemize}
+
+\subsection{Fotometría y Masas Estelares}
+Se usa el catálogo \textbf{COSMOS2015} (Laigle et al.\ 2016), que provee:
+
+\begin{itemize}[leftmargin=2em]
+    \item Fotometría en 31 bandas (óptico + NIR) para $>10^6$ fuentes.
+    \item Redshifts fotométricos calibrados con $\sim20{,}000$ espectros.
+    \item Masas estelares derivadas con síntesis de poblaciones estelares
+          (Bruzual \& Charlot 2003) con IMF de Chabrier (2003).
+\end{itemize}
+
+Para $z > 2.5$ se complementa con el catálogo de Davidzon et al.\ (2017),
+optimizado para galaxias de alto redshift.
+
+\subsection{Muestra Final}
+Tras aplicar criterios de completitud en masa y eliminación de AGN:
+
+\begin{center}
+\begin{tabular}{lc}
+\toprule
+\textbf{Categoría} & \textbf{Número de galaxias} \\
+\midrule
+Total (todos los tipos) & 204\,903 \\
+Star-forming (NUVrJ) & 182\,730 \\
+Rango de redshift & $0.3 < z < 5$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Método: Radio Stacking}
+% ════════════════════════════════════════════════════════════════════════════
+
+La gran mayoría de las galaxias de la muestra están \textit{por debajo del límite
+de detección individual} ($5\sigma$) en radio. Para obtener el SFR promedio en
+bins de masa estelar y redshift, se usa la técnica de \textbf{apilamiento}
+(\textit{stacking}):
+
+\begin{enumerate}[leftmargin=2em]
+    \item Se crean recortes de $40'' \times 40''$ de la imagen de 3\,GHz
+          centrados en la posición óptica de cada galaxia.
+    \item Se calcula la imagen \textbf{media} de todos los recortes en cada bin.
+    \item Se ajusta una gaussiana elíptica 2D para medir el flujo total integrado.
+    \item Los errores se estiman con \textbf{bootstrap} (100 realizaciones),
+          reportando percentiles 5, 16, 50, 84, 95.
+\end{enumerate}
+
+Las simulaciones de los autores demuestran que la media (en lugar de la mediana)
+recupera los flujos con sesgo $< 10\%$ cuando $S_p/\text{rms} > 10$.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Calibración Radio \texorpdfstring{$\to$}{→} SFR}
+% ════════════════════════════════════════════════════════════════════════════
+
+La conversión de flujo observado a SFR sigue tres pasos:
+
+\subsection{Paso 1: Flujo $\to$ Luminosidad rest-frame 1.4\,GHz}
+
+\begin{equation}
+    L_{1.4\,\text{GHz}} = 4\pi D_L^2 \cdot S_{3\,\text{GHz}}
+    \cdot \left(\frac{1.4}{3}\right)^{\alpha} \cdot (1+z)^{-(1+\alpha)},
+    \label{eq:lum}
+\end{equation}
+
+donde $D_L$ es la distancia de luminosidad y $\alpha = -0.7$ el índice espectral
+de radio (emisión síncrotrón no térmica).
+
+\subsection{Paso 2: Luminosidad radio $\to$ Luminosidad infrarroja total}
+
+Se usa la correlación IR--radio de \textbf{Moln\'ar et al.\ (2020)}:
+
+\begin{equation}
+    q_{\text{TIR}} = -0.153 \cdot \log_{10}(L_{1.4\,\text{GHz}}) + 5.9,
+    \label{eq:qtir}
+\end{equation}
+
+donde el parámetro $q_{\text{TIR}}$ relaciona $L_{\text{TIR}}$ con $L_{1.4\,\text{GHz}}$:
+
+\begin{equation}
+    q_{\text{TIR}} = \log_{10}\!\left(\frac{L_{\text{TIR}}}{3.75\times10^{12}\,\text{Hz}}\right)
+    - \log_{10}(L_{1.4\,\text{GHz}}).
+    \label{eq:qdef}
+\end{equation}
+
+\subsection{Paso 3: $L_{\text{TIR}} \to$ SFR}
+
+\begin{equation}
+    \text{SFR}\;[M_\odot\,\text{yr}^{-1}]
+    = \frac{L_{\text{TIR}}}{C_{\text{IR}}},
+    \label{eq:sfr}
+\end{equation}
+
+usando la calibración de Kennicutt \& Evans (2012) con IMF de Chabrier,
+con $\log_{10} C_{\text{IR}} = 43.41$ (en unidades CGS).
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Redshift y Edad del Universo}
+% ════════════════════════════════════════════════════════════════════════════
+
+El paper usa frecuentemente la \textbf{edad del universo} $t$ (en Gyr) como
+variable independiente en lugar del redshift $z$, porque produce relaciones
+más suaves. La conversión se calcula con:
+
+\begin{equation}
+    t(z) = \int_z^{\infty} \frac{dz'}{(1+z')\,H(z')},
+    \label{eq:cosmo}
+\end{equation}
+
+donde $H(z) = H_0\sqrt{\Omega_M(1+z)^3 + \Omega_\Lambda}$,
+con los parámetros cosmológicos del paper:
+$(\Omega_M,\,\Omega_\Lambda,\,h) = (0.30,\,0.70,\,0.70)$,
+es decir $H_0 = 70\,\text{km\,s}^{-1}\text{Mpc}^{-1}$.
+
+\begin{center}
+\begin{tabular}{ccc}
+\toprule
+\textbf{Redshift} $z$ & \textbf{Edad} $t(z)$ & \textbf{Época} \\
+\midrule
+0.0 & 13.5\,Gyr & Universo actual \\
+0.5 & 8.6\,Gyr  & \\
+1.0 & 5.9\,Gyr  & \\
+2.0 & 3.3\,Gyr  & Pico del SFRD \\
+3.0 & 2.1\,Gyr  & \\
+5.0 & 1.2\,Gyr  & Universo temprano \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{La Secuencia Principal: Modelo y Resultados}
+% ════════════════════════════════════════════════════════════════════════════
+
+\subsection{Forma funcional propuesta}
+
+Los autores proponen un nuevo modelo para la MS (Ecuación 6 del paper)
+que permite el aplanamiento a altas masas:
+
+\begin{equation}
+    \langle\log\,\text{SFR}\rangle = S_0(t) - \log\!\left[1 +
+    \left(\frac{10^M}{10^{M'_t}}\right)^{-1}\right],
+    \label{eq:ms}
+\end{equation}
+
+donde:
+\begin{align}
+    M &= \langle\log(M_\star/M_\odot)\rangle, \notag\\
+    S_0(t) &= S_0^{(1)} + a_1\,t \quad \text{(normalización, aumenta con el tiempo)},\notag\\
+    M'_t &= M_0 - a_2\,t \quad \text{(masa de quiebre, disminuye con el tiempo)}.\notag
+\end{align}
+
+\subsection{Comportamiento límite}
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Baja masa} ($M_\star \ll 10^{M'_t}$):
+          la relación es \textit{lineal} con pendiente unitaria,
+          es decir, $\log\,\text{sSFR} = \text{cte}$.
+    \item \textbf{Alta masa} ($M_\star \gg 10^{M'_t}$):
+          el SFR se \textit{aplana} hacia el valor máximo $S_0(t)$.
+\end{itemize}
+
+\subsection{Parámetros ajustados}
+
+\begin{center}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Muestra} & $S_0$ & $M_0$ & $a_1$ & $a_2$ \\
+\midrule
+SF   & $-2.97^{+0.08}_{-0.09}$ & $11.06^{+0.15}_{-0.16}$
+     & $0.22\pm0.01$ & $0.12^{+0.03}_{-0.02}$ \\[4pt]
+All  & $-2.80^{+0.08}_{-0.09}$ & $10.80^{+0.15}_{-0.17}$
+     & $0.23\pm0.01$ & $0.13^{+0.03}_{-0.02}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{sSFR y su evolución con $z$}
+
+El sSFR $\equiv \text{SFR}/M_\star$ mide la eficiencia relativa de formación
+estelar. Sus propiedades clave son:
+
+\begin{itemize}[leftmargin=2em]
+    \item Aumenta fuertemente con el redshift: $\text{sSFR}\propto(1+z)^{2.8}$.
+    \item A todo redshift, las galaxias \textbf{más masivas tienen menor sSFR}.
+    \item A alto $z$ los valores de sSFR convergen; a bajo $z$ divergen
+          (las masivas se apagan primero $\Rightarrow$ \textit{downsizing}).
+\end{itemize}
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Densidad Cósmica de SFR}
+% ════════════════════════════════════════════════════════════════════════════
+
+Combinando la MS medida con las funciones de masa estelar de Davidzon et al.\ (2017),
+se calcula la \textbf{SFRD} integrando:
+
+\begin{equation}
+    \text{SFRD}(z) = \int_{10^8}^{5\times10^{12}\,M_\odot}
+    \langle\text{SFR}(M_\star,z)\rangle \cdot \Phi(M_\star,z)\;dM_\star,
+    \label{eq:sfrd}
+\end{equation}
+
+donde $\Phi(M_\star,z)$ es la función de masa estelar (Schechter doble).
+Resultados principales:
+
+\begin{itemize}[leftmargin=2em]
+    \item El \textbf{pico del SFRD} ocurre en $1.5 < z < 2$.
+    \item Existe una \textbf{masa característica} $M_\star^{\rm char}$ que
+          maximiza la contribución al SFRD en cada época.
+    \item $M_\star^{\rm char}$ \textbf{aumenta con el redshift}:
+          de $\sim10^{9.9}\,M_\odot$ en $z\sim0.35$ a
+          $\sim10^{10.6}\,M_\odot$ en $z\sim2.5$.
+    \item Esto es evidencia de \textbf{downsizing cósmico}.
+\end{itemize}
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Morfología y Quenching}
+% ════════════════════════════════════════════════════════════════════════════
+
+Usando el catálogo morfológico ZEST (imágenes HST ACS F814W), los autores
+clasifican galaxias en cuatro tipos y miden su SFR medio por radio-stacking:
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Tipo morfológico} & \textbf{Posición en la MS} & \textbf{Pendiente SFR--$M_\star$} \\
+\midrule
+Irregular (mergers) & Sobre la MS & $\sim 0.6$ \\
+Disco puro (late-type 2.2--2.3) & En la MS & $\sim 0.75$ (lineal) \\
+Dominada por bulbo (late-type 2.0--2.1) & Bajo la MS & $\sim 0.5$ (plana) \\
+Early-type (elíptica) & Muy bajo la MS & $< 0.5$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Resultado clave:} el aplanamiento de la MS a altas masas y bajo $z$
+se explica porque la fracción de galaxias con bulbo dominante \textit{aumenta}
+hacia el presente. La presencia del bulbo (quiescente) reduce el SFR promedio
+a masa fija sin necesidad de suprimir el SFR del disco.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Entorno Galáctico}
+% ════════════════════════════════════════════════════════════════════════════
+
+Usando la densidad local de galaxias (Scoville et al.\ 2013) y catálogos
+de grupos de rayos X (Gozaliasl et al.\ 2019), se buscan variaciones en la MS:
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{No se encuentra diferencia estadísticamente significativa}
+          en la MS de galaxias SF en distintos entornos ($0.3 < z < 3$).
+    \item Lo que sí cambia con el entorno es la \textit{fracción} de galaxias
+          quiescentes (mayor en entornos densos).
+    \item Conclusión: el entorno afecta \textit{si} una galaxia forma estrellas,
+          pero no \textit{cuánto} forma si ya está en la secuencia principal.
+\end{itemize}
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Conclusiones Principales}
+% ════════════════════════════════════════════════════════════════════════════
+
+\begin{enumerate}[leftmargin=2em]
+    \item Las galaxias SF siguen una MS con \textbf{aplanamiento a altas masas}
+          que se vuelve más pronunciado a bajo redshift.
+    \item El \textbf{pico del SFRD cósmico} ocurre en $1.5 < z < 2$.
+    \item La \textbf{masa característica} que más contribuye al SFRD aumenta
+          con $z$ (\textit{downsizing cósmico}).
+    \item El entorno galáctico \textbf{no modifica} significativamente la MS
+          de galaxias SF a $z > 0.3$.
+    \item Las galaxias con \textbf{bulbo dominante} tienen menor SFR a masa
+          fija; el crecimiento de bulbos hacia bajo $z$ explica el aplanamiento
+          de la MS.
+    \item El \textbf{mass quenching} está vinculado con cambios morfológicos
+          en la composición de galaxias a masa fija.
+\end{enumerate}
+
+\vspace{1cm}
+\noindent\rule{\linewidth}{0.5pt}\\
+{\small \textbf{Referencia:} Leslie, S.\ K.\ et al.\ (2020).
+\textit{The VLA-COSMOS 3\,GHz Large Project: Evolution of Specific Star
+Formation Rates out to $z\sim5$}. ApJ, 899, 58.
+\href{https://doi.org/10.3847/1538-4357/aba044}{doi:10.3847/1538-4357/aba044}}
+
+\end{document}

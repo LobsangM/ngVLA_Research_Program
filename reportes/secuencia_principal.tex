@@ -1,0 +1,591 @@
+\documentclass[12pt, a4paper]{article}
+
+% Paquetes
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta, decorations.pathmorphing, backgrounds, positioning}
+
+\geometry{top=2.5cm, bottom=2.5cm, left=3cm, right=3cm}
+
+
+\definecolor{azulms}{RGB}{25, 100, 180}
+\definecolor{rojoquench}{RGB}{190, 40, 40}
+\definecolor{verdedisco}{RGB}{30, 140, 80}
+\definecolor{naranjabulge}{RGB}{210, 110, 20}
+\definecolor{moradostarburst}{RGB}{120, 50, 160}
+\definecolor{grisclaro}{RGB}{245, 245, 248}
+
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\textcolor{azulms}{\small Secuencia Principal de Galaxias}}
+\lhead{\textcolor{azulms}{\small Astronomía Extragaláctica}}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+
+
+\titleformat{\section}{\large\bfseries\color{azulms}}{}{0em}{}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries\color{rojoquench}}{}{0em}{}
+
+
+
+\begin{document}
+
+
+% ── Portada
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    {\color{azulms}\rule{\linewidth}{1.5pt}}\\[0.4cm]
+    {\LARGE\bfseries\color{azulms}
+        Secuencia Principal\\[0.3cm]
+        de Galaxias}\\[0.4cm]
+    {\color{azulms}\rule{\linewidth}{1.5pt}}\\[1.5cm]
+    {\normalsize
+        Basada en Leslie et al.\ (2020)}\\[2cm]
+    {\normalsize Notas de prácticas}\\[0.5cm]
+    {\normalsize \today}
+    \vfill
+\end{titlepage}
+
+% ── Índice ───────────────────────────────────────────────────────────────────
+\tableofcontents
+\newpage
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{¿Qué es la Secuencia Principal?}
+% ════════════════════════════════════════════════════════════════════════════
+
+Cuando se representa la \textbf{Tasa de Formación Estelar} (SFR,
+\textit{Star Formation Rate}) frente a la \textbf{masa estelar} $M_\star$
+de una muestra de galaxias en escala logarítmica, se observa que las galaxias
+activamente formando estrellas no se distribuyen de forma aleatoria:
+la mayoría ocupa una banda bien definida y estrecha llamada la
+\textbf{Secuencia Principal} (\textit{Main Sequence}, MS).
+
+\vspace{0.5em}
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+    width=12cm, height=8cm,
+    xlabel={$\log_{10}(M_\star\,/\,M_\odot)$},
+    ylabel={$\log_{10}(\mathrm{SFR}\,/\,M_\odot\,\mathrm{yr}^{-1})$},
+    xmin=8.5, xmax=12.0,
+    ymin=-2.5, ymax=3.5,
+    grid=both, grid style={gray!20},
+    tick align=inside,
+    legend pos=north west,
+    legend style={font=\small},
+    title={\textbf{Plano SFR -- $M_\star$}},
+    title style={color=azulms}
+]
+
+%% ── Quiescent galaxies ──────────────────────────────────────────────────
+\addplot[
+    only marks, mark=*, mark size=1.8pt,
+    color=rojoquench, opacity=0.5
+] table {
+9.0  -1.5
+9.5  -1.2
+10.0 -0.8
+10.5 -0.6
+11.0 -0.3
+11.5  0.1
+9.2  -1.8
+9.8  -1.0
+10.3 -0.9
+10.8 -0.4
+11.2 -0.1
+};
+\addlegendentry{Galaxias quiescentes}
+
+%% ── Star-forming main sequence ─────────────────────────────────────────
+\addplot[
+    only marks, mark=square*, mark size=1.8pt,
+    color=azulms, opacity=0.6
+] table {
+9.0   0.3
+9.3   0.6
+9.6   0.9
+9.9   1.2
+10.2  1.4
+10.5  1.6
+10.8  1.75
+11.1  1.85
+11.4  1.90
+9.1   0.4
+9.4   0.7
+9.7   1.0
+10.0  1.25
+10.3  1.45
+10.6  1.65
+10.9  1.78
+11.2  1.88
+};
+\addlegendentry{Secuencia Principal (SF)}
+
+%% ── Starbursts ──────────────────────────────────────────────────────────
+\addplot[
+    only marks, mark=triangle*, mark size=2pt,
+    color=moradostarburst, opacity=0.8
+] table {
+10.0  2.5
+10.5  2.7
+10.2  2.8
+9.8   2.4
+11.0  3.0
+};
+\addlegendentry{Starbursts}
+
+%% ── MS fit line ─────────────────────────────────────────────────────────
+\addplot[
+    thick, color=azulms,
+    domain=8.5:11.5, samples=100
+] {min(1.92, (x - 9.0)*0.95 - 0.5)};
+\addlegendentry{Ajuste MS (z $\sim$ 1)}
+
+%% ── Quenched region ─────────────────────────────────────────────────────
+\addplot[
+    thick, dashed, color=rojoquench,
+    domain=8.5:11.5, samples=100
+] {min(0.92, (x - 9.0)*0.95 - 1.5)};
+\addlegendentry{MS $-$ 1\,dex (límite quiescentes)}
+
+%% ── Annotations ─────────────────────────────────────────────────────────
+\node[font=\small\bfseries, color=azulms]
+    at (axis cs: 10.5, 1.1) {$\sim$0.3\,dex de dispersión};
+\draw[->, azulms, thick]
+    (axis cs: 10.2, 1.05) -- (axis cs: 10.5, 1.62);
+
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+La relación muestra que, en promedio:
+\begin{equation}
+    \log_{10}(\mathrm{SFR}) \approx \alpha\,\log_{10}(M_\star) + \beta,
+    \label{eq:ms_lineal}
+\end{equation}
+con pendiente $\alpha \approx 0.75$--$1.0$ y dispersión $\sigma \approx 0.2$--$0.3$\,dex.
+Esta relación se mantiene observacionalmente desde $z \sim 0$ hasta al menos $z \sim 4$--$5$
+(Noeske et al.\ 2007; Karim et al.\ 2011; Leslie et al.\ 2020).
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Las Dos Poblaciones de Galaxias}
+% ════════════════════════════════════════════════════════════════════════════
+
+En el plano SFR--$M_\star$ se identifican claramente dos poblaciones:
+
+\begin{center}
+\begin{tabular}{p{4cm} p{4.5cm} p{4.5cm}}
+\toprule
+\textbf{Propiedad} & \textbf{Star-Forming (MS)} & \textbf{Quiescentes} \\
+\midrule
+Posición en el plano & Sobre la MS & $\sim 1$\,dex bajo la MS \\
+Color óptico & Azul & Roja \\
+Morfología & Disco, espiral & Elíptica, esferical \\
+Gas & Rica en gas frío & Pobre en gas \\
+sSFR & Alto & Muy bajo \\
+Masa típica & Cualquier masa & Alta masa \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Además existe una pequeña población de \textbf{Starbursts} ($\sim$5--20\% de las SF)
+que se ubica $\sim$1\,dex \textit{sobre} la MS, con SFRs muy elevados tipicamente
+asociados a fusiones (\textit{mergers}) de galaxias.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{La Tasa Específica de Formación Estelar (sSFR)}
+% ════════════════════════════════════════════════════════════════════════════
+
+El \textbf{sSFR} (\textit{specific Star Formation Rate}) se define como:
+
+\begin{equation}
+    \mathrm{sSFR} \equiv \frac{\mathrm{SFR}}{M_\star}
+    \quad [\mathrm{yr}^{-1}],
+    \label{eq:ssfr}
+\end{equation}
+
+y mide la \textit{eficiencia relativa} con que una galaxia convierte su masa
+en nuevas estrellas. Es el inverso del tiempo de doblado de masa:
+
+\begin{equation}
+    t_{\mathrm{doble}} = \frac{1}{\mathrm{sSFR}}
+    \approx \frac{M_\star}{\mathrm{SFR}}.
+    \label{eq:tdouble}
+\end{equation}
+
+Propiedades clave del sSFR:
+\begin{itemize}[leftmargin=2em]
+    \item Las galaxias más masivas tienen \textbf{menor sSFR} a todo redshift
+          (se ``apagan'' más eficientemente).
+    \item El sSFR \textbf{aumenta fuertemente con el redshift}:
+          \begin{equation}
+              \mathrm{sSFR}(z) \propto (1+z)^{2.8}
+              \quad \text{(Leslie et al.\ 2020)}.
+          \end{equation}
+    \item Esto implica que en el universo joven las galaxias formaban estrellas
+          mucho más activamente que hoy.
+\end{itemize}
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+    width=11cm, height=6.5cm,
+    xlabel={Redshift $z$},
+    ylabel={$\log_{10}(\mathrm{sSFR}\,/\,\mathrm{Gyr}^{-1})$},
+    xmin=0, xmax=5,
+    ymin=-2, ymax=1.5,
+    grid=both, grid style={gray!20},
+    legend pos=north west,
+    legend style={font=\small},
+    title={\textbf{Evolución del sSFR con el redshift}},
+    title style={color=azulms}
+]
+
+%% Líneas para distintas masas (sSFR ∝ (1+z)^2.8, desplazadas por masa)
+\addplot[thick, color=azulms, domain=0:5, samples=80]
+    {2.8*log10(1+x) - 1.6};
+\addlegendentry{$\log(M_\star/M_\odot)=10.1$}
+
+\addplot[thick, color=verdedisco, dashed, domain=0:5, samples=80]
+    {2.8*log10(1+x) - 1.9};
+\addlegendentry{$\log(M_\star/M_\odot)=10.5$}
+
+\addplot[thick, color=rojoquench, dotted, domain=0:5, samples=80]
+    {2.8*log10(1+x) - 2.3};
+\addlegendentry{$\log(M_\star/M_\odot)=11.0$}
+
+\node[font=\small, color=azulms]
+    at (axis cs: 4.0, 0.8) {$\mathrm{sSFR}\propto(1+z)^{2.8}$};
+
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Forma de la Secuencia Principal}
+% ════════════════════════════════════════════════════════════════════════════
+
+\subsection{lineal o con aplanamiento}
+
+\begin{description}[leftmargin=2em]
+    \item[\textcolor{azulms}{Relación lineal}]
+        $\log\,\mathrm{SFR} = \alpha\,\log\,M_\star + \beta$ con $\alpha \approx 0.75$--$1.0$
+        en todo el rango de masas. Típicamente encontrada en estudios que seleccionan
+        galaxias muy azules o solo discos (Speagle et al.\ 2014; Pearson et al.\ 2018).
+
+    \item[\textcolor{rojoquench}{Relación con aplanamiento}]
+        La pendiente efectiva disminuye a $\alpha \approx 0.3$--$0.5$ para
+        $M_\star > 10^{10}\,M_\odot$ a bajo $z$. Encontrada en estudios con SFR
+        del IR o radio (Whitaker et al.\ 2014; Schreiber et al.\ 2015;
+        Leslie et al.\ 2020).
+\end{description}
+
+El aplanamiento es más prominente a \textbf{bajo redshift} y puede explicarse
+por la mezcla de galaxias morfológicamente distintas en la muestra.
+
+\subsection{El modelo de Leslie et al.\ (2020)}
+
+Se propone la siguiente parametrización que permite el aplanamiento:
+
+\begin{equation}
+    \langle\log\,\mathrm{SFR}\rangle =
+    S_0(t) - \log\!\left[1 + \left(\frac{10^M}{10^{M'_t}}\right)^{-1}\right],
+    \label{eq:ms_leslie}
+\end{equation}
+
+donde $M = \log(M_\star/M_\odot)$, $t$ es la edad del universo en Gyr, y:
+
+\begin{align}
+    S_0(t) &= S_0^{(1)} + a_1\,t, \label{eq:s0}\\
+    M'_t   &= M_0 - a_2\,t.       \label{eq:mt}
+\end{align}
+
+Esta forma tiene dos regímenes límite naturales:
+
+\begin{equation}
+    \langle\log\,\mathrm{SFR}\rangle \approx
+    \begin{cases}
+        M + (S_0 - M'_t) & \text{si } M \ll M'_t
+        \quad\text{(pendiente unitaria, sSFR constante)}\\[6pt]
+        S_0(t)           & \text{si } M \gg M'_t
+        \quad\text{(aplanamiento)}
+    \end{cases}
+    \label{eq:limites}
+\end{equation}
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+    width=11cm, height=6.5cm,
+    xlabel={$\log_{10}(M_\star\,/\,M_\odot)$},
+    ylabel={$\log_{10}(\mathrm{SFR}\,/\,M_\odot\,\mathrm{yr}^{-1})$},
+    xmin=8.5, xmax=12.0,
+    ymin=-0.5, ymax=3.0,
+    grid=both, grid style={gray!20},
+    legend pos=north west,
+    legend style={font=\small},
+    title={\textbf{Forma de la MS según Leslie et al.\ (2020)}},
+    title style={color=azulms}
+]
+
+%% z~0.4 (t~9.5 Gyr): S0 = -2.97 + 0.22*9.5 = -0.88, Mt = 11.06 - 0.12*9.5 = 9.92
+\addplot[thick, color=rojoquench, domain=8.5:12.0, samples=150]
+    { -0.88 - ln(1 + 10^(9.92 - x))/ln(10) };
+\addlegendentry{$z \sim 0.4$ ($t \approx 9.5$\,Gyr)}
+
+%% z~1.3 (t~4.7 Gyr): S0 = -2.97 + 0.22*4.7 = -1.93, Mt = 11.06 - 0.12*4.7 = 10.50
+\addplot[thick, color=naranjabulge, domain=8.5:12.0, samples=150]
+    { -1.93 - ln(1 + 10^(10.50 - x))/ln(10) };
+\addlegendentry{$z \sim 1.3$ ($t \approx 4.7$\,Gyr)}
+
+%% z~2.0 (t~3.3 Gyr): S0 = -2.97 + 0.22*3.3 = -2.24, Mt = 11.06 - 0.12*3.3 = 10.66
+\addplot[thick, color=verdedisco, domain=8.5:12.0, samples=150]
+    { -2.24 - ln(1 + 10^(10.66 - x))/ln(10) };
+\addlegendentry{$z \sim 2.0$ ($t \approx 3.3$\,Gyr)}
+
+%% z~3.0 (t~2.1 Gyr): S0 = -2.97 + 0.22*2.1 = -2.51, Mt = 11.06 - 0.12*2.1 = 10.81
+\addplot[thick, color=azulms, domain=8.5:12.0, samples=150]
+    { -2.51 - ln(1 + 10^(10.81 - x))/ln(10) };
+\addlegendentry{$z \sim 3.0$ ($t \approx 2.1$\,Gyr)}
+
+%% Flecha indicando evolución
+\draw[->, thick, gray]
+    (axis cs: 9.5, 0.6) -- (axis cs: 9.5, 1.9)
+    node[midway, right, font=\small, gray] {$z$ crece};
+
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+Nótese cómo la MS se \textbf{desplaza hacia arriba} (mayor SFR) al aumentar
+el redshift, y cómo el \textbf{aplanamiento} es más prominente a bajo $z$.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Evolución con el Redshift: Valores Típicos de SFR}
+% ════════════════════════════════════════════════════════════════════════════
+
+La tabla siguiente muestra los SFR típicos predichos por el modelo de
+Leslie et al.\ (2020) para galaxias SF con $M_\star = 10^{10}\,M_\odot$:
+
+\begin{center}
+\begin{tabular}{cccc}
+\toprule
+\textbf{Redshift} $z$ & \textbf{Edad} $t(z)$ & \textbf{SFR típico} & \textbf{sSFR} \\
+& [Gyr] & [$M_\odot\,\mathrm{yr}^{-1}$] & [$\mathrm{Gyr}^{-1}$] \\
+\midrule
+0.4 & 9.5 & $\sim$1--2   & $\sim$0.1--0.2 \\
+1.0 & 5.9 & $\sim$5--10  & $\sim$0.5--1.0 \\
+2.0 & 3.3 & $\sim$30--50 & $\sim$3--5 \\
+3.0 & 2.1 & $\sim$100    & $\sim$10 \\
+5.0 & 1.2 & $\sim$300    & $\sim$30 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+La evolución es dramática: a $z \sim 3$ una galaxia de la misma masa
+formaba estrellas $\sim 50$ veces más rápido que hoy.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Morfología y la Secuencia Principal}
+% ════════════════════════════════════════════════════════════════════════════
+
+\subsection{Tipos morfológicos y su posición en la MS}
+
+Leslie et al.\ (2020) muestran con claridad que la morfología de una galaxia
+determina su posición relativa en la MS:
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+    width=11cm, height=6cm,
+    xlabel={$\log_{10}(M_\star\,/\,M_\odot)$},
+    ylabel={$\Delta\log_{10}(\mathrm{SFR})$ [dex]},
+    xmin=9.5, xmax=11.5,
+    ymin=-1.0, ymax=0.8,
+    grid=both, grid style={gray!20},
+    legend pos=south west,
+    legend style={font=\small},
+    title={\textbf{Desviación de la MS según morfología (z $\sim$ 0.75)}},
+    title style={color=azulms},
+    yticklabel style={/pgf/number format/fixed}
+]
+
+%% Línea de referencia MS
+\addplot[thick, black, dashed, domain=9.5:11.5] {0};
+\addlegendentry{MS promedio (referencia)}
+
+%% Disco puro: MS más empinada → por encima de la media a altas masas
+\addplot[thick, color=verdedisco, domain=9.5:11.2, samples=80]
+    {0.25*(x - 10.5)};
+\addlegendentry{Disco puro (más empinada)}
+
+%% Dominadas por bulbo
+\addplot[thick, color=naranjabulge, dashed, domain=9.5:11.5, samples=80]
+    {-0.15*(x - 10.0) - 0.05};
+\addlegendentry{Bulbo dominante}
+
+%% Irregulares
+\addplot[thick, color=moradostarburst, dotted, domain=9.5:11.0, samples=80]
+    {0.35};
+\addlegendentry{Irregulares (mergers)}
+
+%% Early-type
+\addplot[thick, color=rojoquench, domain=10.0:11.5, samples=80]
+    {-0.5 - 0.1*(x - 10.5)};
+\addlegendentry{Early-type (elípticas)}
+
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+\subsection{¿Por qué se aplana la MS a altas masas?}
+
+El argumento central del paper es el siguiente:
+
+\begin{enumerate}[leftmargin=2em]
+    \item Las galaxias de \textbf{disco puro} siguen una MS \textit{lineal}
+          (pendiente $\approx 0.75$) sin aplanamiento.
+    \item Las galaxias \textbf{dominadas por bulbo} tienen menor SFR a masa
+          fija porque el bulbo es quiescente (no forma estrellas).
+    \item A bajo redshift, la fracción de galaxias con bulbo prominente
+          \textbf{aumenta}, especialmente a altas masas.
+    \item La \textit{combinación} de discos + bulbos produce el aplanamiento
+          observado en la MS promedio.
+\end{enumerate}
+
+Matemáticamente, si el bulbo tiene fracción $B/T$ de la masa total y SFR $\approx 0$:
+
+\begin{equation}
+    \mathrm{SFR}_{\mathrm{total}} \approx \mathrm{SFR}_{\mathrm{disco}}
+    = \mathrm{SFR}_{\mathrm{MS,disco}} \times (1 - B/T)^{\beta},
+    \label{eq:bulge}
+\end{equation}
+
+donde $\beta$ depende de la pendiente de la MS de los discos. A mayor $B/T$,
+menor SFR total a masa fija.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Quenching: ¿Cómo se apagan las Galaxias?}
+% ════════════════════════════════════════════════════════════════════════════
+
+El ``apagado'' de la formación estelar (\textit{quenching}) es el proceso
+por el cual una galaxia transita desde la MS hacia la región quiescente.
+Se proponen varios mecanismos:
+
+\begin{center}
+\begin{tabular}{p{3.5cm} p{4cm} p{4.5cm}}
+\toprule
+\textbf{Mecanismo} & \textbf{Escala de masa} & \textbf{Descripción} \\
+\midrule
+\textit{Mass quenching} (Peng et al.\ 2010)
+    & $M_\star \gtrsim 10^{10.2}\,M_\odot$
+    & Feedback de AGN, calentamiento gravitacional \\[6pt]
+\textit{Environmental quenching}
+    & $M_\star \lesssim 10^{10}\,M_\odot$
+    & Ram-pressure stripping, strangulation en cúmulos \\[6pt]
+\textit{Morphological quenching}
+    & $M_\star \gtrsim 10^{10}\,M_\odot$
+    & El bulbo estabiliza el gas contra la fragmentación \\[6pt]
+\textit{Halo quenching}
+    & $M_h \gtrsim 10^{12}\,M_\odot$
+    & Shock-heating impide acreción de gas frío \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Leslie et al.\ (2020) concluyen que el \textbf{quenching de masa} está ligado
+a cambios morfológicos: la presencia del bulbo es suficiente para explicar la
+reducción del SFR en galaxias masivas, sin necesidad de suprimir el SFR del disco.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Downsizing Cósmico}
+% ════════════════════════════════════════════════════════════════════════════
+
+Un resultado clave que emerge de la MS y su evolución es el
+\textbf{downsizing} o ``encogimiento cósmico'': las galaxias más masivas
+formaron sus estrellas \textit{primero} y se apagaron antes.
+
+Evidencias en el paper:
+\begin{itemize}[leftmargin=2em]
+    \item La \textbf{masa característica} $M_\star^{\rm char}$ que maximiza la
+          contribución a la densidad de SFR cósmica \textit{aumenta} con el
+          redshift (más masas grandes contribuyen más a alto $z$).
+    \item La \textbf{masa de quiebre} $M'_t$ de la MS también aumenta con $z$:
+          \begin{equation}
+              M'_t = M_0 - a_2\,t \approx 11.06 - 0.12\,t,
+          \end{equation}
+          lo que significa que a alto $z$ el aplanamiento ocurre en masas
+          mayores que a bajo $z$.
+    \item El sSFR de las galaxias masivas disminuye más rápido con el tiempo
+          que el de las galaxias de baja masa.
+\end{itemize}
+
+\begin{center}
+\begin{tabular}{ccc}
+\toprule
+\textbf{Redshift} $z$ & \textbf{Masa característica} & \textbf{Masa de quiebre} $M'_t$ \\
+& $\log(M_\star^{\rm char}/M_\odot)$ & $\log(M_\star/M_\odot)$ \\
+\midrule
+$\sim$0.35 & 9.9  & $\sim$10.0 \\
+$\sim$1.0  & 10.2 & $\sim$10.4 \\
+$\sim$2.0  & 10.5 & $\sim$10.7 \\
+$\sim$2.5  & 10.6 & $\sim$10.8 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Resumen Conceptual}
+% ════════════════════════════════════════════════════════════════════════════
+
+\begin{center}
+\colorbox{grisclaro}{%
+\begin{minipage}{0.9\textwidth}
+\vspace{0.5em}
+\textbf{La Secuencia Principal en pocas ideas:}
+\vspace{0.3em}
+\begin{enumerate}[leftmargin=2em]
+    \item La MS es una \textbf{correlación universal} entre SFR y $M_\star$
+          para galaxias star-forming, con dispersión $\sigma \approx 0.2$--$0.3$\,dex.
+    \item La \textbf{normalización aumenta con el redshift}: el universo
+          joven formaba estrellas mucho más activamente.
+    \item A \textbf{altas masas} y bajo $z$, la MS se \textbf{aplana}, reflejo
+          de la creciente fracción de galaxias con bulbo dominante.
+    \item El \textbf{sSFR} disminuye con la masa y aumenta con $z$,
+          con $\mathrm{sSFR} \propto (1+z)^{2.8}$.
+    \item Las galaxias más masivas se apagan antes (\textbf{downsizing}).
+    \item El \textbf{entorno} modifica la fracción de quiescentes pero
+          no la MS de las galaxias activas.
+\end{enumerate}
+\vspace{0.5em}
+\end{minipage}}
+\end{center}
+
+\vspace{1cm}
+\noindent\rule{\linewidth}{0.5pt}\\[0.3em]
+{\small \textbf{Referencias principales:}
+Noeske et al.\ (2007) ApJL 660, L43 $\cdot$
+Karim et al.\ (2011) ApJ 730, 61 $\cdot$
+Speagle et al.\ (2014) ApJS 214, 15 $\cdot$
+Peng et al.\ (2010) ApJ 721, 193 $\cdot$
+Leslie et al.\ (2020) ApJ 899, 58.}
+
+\end{document}
