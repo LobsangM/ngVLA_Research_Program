@@ -26,26 +26,26 @@ def add_correlated_noise(fits_file, beam_arcsec, noise_uJy):
     pixel_deg = abs(header["CDELT1"])
     pixel_arcsec = pixel_deg * 3600.0
 
-    # áreas
-    beam_area = 1.1331 * beam_arcsec**2
-    pixel_area = pixel_arcsec**2
-
-    # pixeles por beam
-    N_pix_beam = beam_area / pixel_area
-
-    # ruido por pixel
-    sigma_pixel = sigma_beam / np.sqrt(N_pix_beam)
-
     print("Beam:", beam_arcsec, "arcsec")
     print("Noise:", noise_uJy, "uJy/beam")
     print("Pixel:", pixel_arcsec, "arcsec")
-    print("Pixels/beam:", N_pix_beam)
-    print("Sigma pixel:", sigma_pixel, "Jy")
+    print("Sigma beam:", sigma_beam, "Jy")
 
-   #Ruido blanco
+    # imsmooth conserva el flujo total (Jy/pixel), diluyendo el pico por
+    # pixel en proporción al número de pixeles dentro del beam. Hay que
+    # reescalar a Jy/beam (multiplicando por el área del beam en pixeles)
+    # antes de sumar el ruido, que sí está definido en Jy/beam.
+    beam_area_pix = (np.pi / (4.0 * np.log(2.0))) * (beam_arcsec / pixel_arcsec) ** 2
+    data = data * beam_area_pix
+
+    print("Pixeles/beam:", beam_area_pix)
+
+    # Ruido blanco con std = sigma_beam. Al convolucionar con un kernel
+    # normalizado en L2 (ver abajo), el ruido correlacionado resultante
+    # conserva std ~ sigma_beam por pixel, consistente con Jy/beam.
     white_noise = np.random.normal(
         loc=0.0,
-        scale=sigma_pixel,
+        scale=sigma_beam,
         size=data.shape
     )
 
@@ -74,7 +74,10 @@ def add_correlated_noise(fits_file, beam_arcsec, noise_uJy):
         (2 * sigma_kernel_pix**2)
     )
 
-    kernel /= kernel.sum()
+    # Normalización L2 (no L1): preserva el std del ruido tras la
+    # convolución. kernel /= kernel.sum() conserva flujo (correcto para
+    # suavizar señal) pero diluye la varianza del ruido.
+    kernel /= np.sqrt((kernel**2).sum())
 
     # Ruido correlacionado
     correlated_noise = fftconvolve(
@@ -92,6 +95,7 @@ def add_correlated_noise(fits_file, beam_arcsec, noise_uJy):
     header["BMAJ"] = beam_deg
     header["BMIN"] = beam_deg
     header["BPA"] = 0.0
+    header["BUNIT"] = "Jy/beam"
 
     header.comments["BMAJ"] = "Beam major axis [deg]"
     header.comments["BMIN"] = "Beam minor axis [deg]"
