@@ -1,0 +1,369 @@
+\documentclass[12pt, a4paper]{article}
+
+% Paquetes
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta, decorations.pathmorphing, backgrounds, positioning}
+
+\geometry{top=2.5cm, bottom=2.5cm, left=3cm, right=3cm}
+
+
+\definecolor{azulms}{RGB}{25, 100, 180}
+\definecolor{rojoquench}{RGB}{190, 40, 40}
+\definecolor{verdedisco}{RGB}{30, 140, 80}
+\definecolor{naranjabulge}{RGB}{210, 110, 20}
+\definecolor{moradostarburst}{RGB}{120, 50, 160}
+\definecolor{grisclaro}{RGB}{245, 245, 248}
+
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\textcolor{azulms}{\small Contornos y validación de ruido}}
+\lhead{\textcolor{azulms}{\small Pipeline ngVLA / VLA -- SINGS}}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+
+
+\titleformat{\section}{\large\bfseries\color{azulms}}{}{0em}{}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries\color{rojoquench}}{}{0em}{}
+
+
+
+\begin{document}
+
+
+% ── Portada
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    {\color{azulms}\rule{\linewidth}{1.5pt}}\\[0.4cm]
+    {\LARGE\bfseries\color{azulms}
+        Contornos de Detección\\[0.3cm]
+        y Validación de Ruido}\\[0.4cm]
+    {\color{azulms}\rule{\linewidth}{1.5pt}}\\[1.5cm]
+    {\normalsize
+        Pipeline de simulación ngVLA / VLA -- Galaxias SINGS}\\[2cm]
+    {\normalsize Notas de dudas y respuestas}\\[0.5cm]
+    {\normalsize \today}
+    \vfill
+\end{titlepage}
+
+% ── Índice
+\tableofcontents
+\newpage
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Contexto: la petición del asesor}
+% ════════════════════════════════════════════════════════════════════════════
+
+Tras compartir la carpeta \texttt{collage/} (una imagen por galaxia con el mapa
+de SFR y las cuatro configuraciones de telescopio -- ngVLA-A, ngVLA-B, VLA-A,
+VLA-B -- en cada uno de los cinco redshifts simulados), el asesor pidió dos
+cosas concretas:
+
+\begin{enumerate}
+    \item \textbf{Agregar contornos a las imágenes}, estimando el RMS de cada
+          una y dibujando contornos a partir de $3\sigma$, para poder distinguir
+          qué estructuras son emisión real de la galaxia y cuáles son
+          simplemente ruido.
+    \item \textbf{Medir el nivel de ruido} de cada imagen simulada y compararlo
+          con el valor teórico de sensibilidad de la tabla de diseño del
+          telescopio (ngVLA / VLA), como comprobación de que la simulación
+          reproduce lo que el instrumento debería entregar.
+\end{enumerate}
+
+Este documento explica los conceptos estadísticos detrás de ambos puntos,
+qué se encontró al implementarlos, y por qué el número de contornos visibles
+cambia con el redshift.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{¿Qué es el RMS y qué significa \texorpdfstring{$\sigma$}{sigma}?}
+% ════════════════════════════════════════════════════════════════════════════
+
+En una imagen de radio sin fuente, el valor de cada píxel de fondo fluctúa
+al azar alrededor de cero: es \textbf{ruido gaussiano}, producido por el
+receptor, la electrónica y (en esta simulación) generado sintéticamente para
+imitar esa estadística. El \textbf{RMS} (\textit{root mean square}) es la
+dispersión característica de esas fluctuaciones:
+
+\begin{equation}
+    \mathrm{RMS} = \sigma = \sqrt{\left\langle (x - \bar{x})^2 \right\rangle},
+    \label{eq:rms}
+\end{equation}
+
+es decir, "cuánto varían típicamente los píxeles de fondo alrededor de su
+valor medio". Un valor de "$3\sigma$" es simplemente tres veces esa
+dispersión.
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+    width=12cm, height=6.5cm,
+    xlabel={Valor del píxel / $\sigma$},
+    ylabel={Densidad de probabilidad},
+    xmin=-5, xmax=5, ymin=0, ymax=0.45,
+    grid=both, grid style={gray!20},
+    axis lines=middle,
+    title={\textbf{Distribución del ruido gaussiano y umbrales de detección}},
+    title style={color=azulms},
+    xtick={-5,-3,-2,-1,0,1,2,3,5},
+    ytick=\empty,
+    legend pos=north east,
+    legend style={font=\footnotesize}
+]
+
+\addplot[thick, color=azulms, domain=-5:5, samples=200, fill=azulms, fill opacity=0.08]
+    {1/sqrt(2*pi)*exp(-x^2/2)};
+\addlegendentry{Ruido puro (gaussiano)}
+
+\draw[dashed, color=rojoquench, thick] (axis cs:3,0) -- (axis cs:3,0.45);
+\draw[dashed, color=rojoquench, thick] (axis cs:-3,0) -- (axis cs:-3,0.45);
+\node[color=rojoquench, font=\small\bfseries] at (axis cs:3.6,0.40) {$3\sigma$};
+
+\node[color=verdedisco, font=\small] at (axis cs:0,0.30) {$99.7\%$ del ruido};
+\node[color=verdedisco, font=\small] at (axis cs:0,0.25) {cae dentro de $\pm 3\sigma$};
+
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+La razón de usar $3\sigma$ como umbral es puramente estadística: si el ruido
+es gaussiano, solo un $0.3\%$ de los píxeles de puro ruido superarían ese
+valor por azar. Por eso, si una región de la imagen supera $3\sigma$, es muy
+poco probable que sea una fluctuación casual del ruido -- es una
+\textbf{detección estadísticamente significativa}. Niveles más altos
+($5\sigma$, $10\sigma$, $20\sigma$) marcan detecciones cada vez más seguras,
+típicamente el núcleo de una fuente real.
+
+En la práctica, el RMS no se calcula con la fórmula ingenua sobre toda la
+imagen (eso incluiría la fuente y sesgaría el resultado hacia arriba), sino
+con \textbf{sigma-clipping iterativo}
+(\texttt{astropy.stats.sigma\_clipped\_stats}): se calcula la media y
+desviación estándar, se descartan los píxeles que se alejan más de
+$3\sigma$ de la media (probablemente señal, no fondo), y se repite el
+cálculo solo con los píxeles restantes. Esto converge a una estimación
+robusta del RMS del \textit{fondo}, sin que la propia fuente lo contamine.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{¿Qué significa el contorno en las imágenes ngVLA / VLA?}
+% ════════════════════════════════════════════════════════════════════════════
+
+El contorno (dibujado en color cian, \texttt{\#00ffcc}) traza el borde de las
+regiones cuyo valor supera $3\sigma$, $5\sigma$, $10\sigma$ o $20\sigma$ del
+RMS medido en esa misma imagen. Es clave entender lo que \textbf{no} hace: no
+cambia los colores de la imagen, solo dibuja una línea sobre las zonas que
+son estadísticamente significativas.
+
+Esto es fundamental porque el color por sí solo \textbf{engaña al ojo}: con
+mapas de color como \texttt{plasma} o \texttt{hot}, cualquier región que esté
+cerca del percentil 99.5 de la imagen se ve "caliente" (amarilla o blanca),
+sin importar si ese valor es una fuente real o simplemente el pico más alto
+de una fluctuación de ruido correlacionado. El contorno es lo que permite
+distinguir ambos casos:
+
+\begin{itemize}
+    \item \textbf{Con contorno alrededor}: la región supera el umbral de
+          $3\sigma$ -- es una detección real.
+    \item \textbf{Sin contorno, aunque se vea "caliente" por color}: es
+          ruido correlacionado que por azar produce un pico visualmente
+          similar, pero no supera el umbral estadístico.
+\end{itemize}
+
+En varias combinaciones de galaxia / redshift / configuración, el pico real
+de la fuente está apenas por encima del ruido (o por debajo), así que el
+contorno aparece como uno o ningún pequeño círculo aislado -- eso es un
+resultado físico válido (no-detección o detección marginal), no un error de
+la simulación.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{RMS medido vs. RMS teórico: el bug que se encontró}
+% ════════════════════════════════════════════════════════════════════════════
+
+\subsection{Qué es cada valor}
+
+\begin{description}
+    \item[\textcolor{azulms}{RMS teórico}] es la sensibilidad que promete
+        la tabla de diseño del instrumento (p.\ ej.\ 28.44\,nJy/beam para
+        ngVLA-A). Es lo que la simulación \textit{debería} reproducir si el
+        ruido está bien generado.
+    \item[\textcolor{rojoquench}{RMS medido}] es lo que efectivamente se
+        calcula (con sigma-clipping) sobre cada imagen ya generada por el
+        pipeline.
+\end{description}
+
+\subsection{El bug encontrado}
+
+Al implementar esta comprobación, el RMS medido resultó \textbf{cinco órdenes
+de magnitud menor} que el teórico ($\sim 7.8\times10^{-13}$ vs.\
+$2.84\times10^{-8}$\,Jy/beam para ngVLA-A). La causa: la función
+\texttt{add\_correlated\_noise} (duplicada en los ocho scripts de telescopio,
+en \texttt{Modelo/} y \texttt{SINGS/}) atenuaba el ruido dos veces en
+cascada:
+
+\begin{enumerate}
+    \item Primero dividía la desviación del ruido blanco por
+          $\sqrt{N_{\mathrm{pix/beam}}}$, asumiendo que la convolución
+          posterior "recuperaría" el nivel deseado.
+    \item Pero el kernel gaussiano usado para correlacionar ese ruido se
+          normalizaba \textbf{por su suma} (norma $L_1$, correcta para
+          \textit{conservar flujo} al suavizar una imagen), en vez de por su
+          norma $L_2$. Convolucionar ruido con un kernel $L_1$-normalizado
+          \textbf{reduce su varianza} en un factor $\sqrt{\sum k_i^2} \ll 1$
+          para un kernel ancho, en vez de preservarla.
+\end{enumerate}
+
+\subsection{La corrección}
+
+\begin{itemize}
+    \item El ruido blanco se genera directamente con
+          $\mathrm{std} = \sigma_{\mathrm{beam}}$ (sin la predivisión).
+    \item El kernel gaussiano se normaliza en norma $L_2$:
+          \begin{equation}
+              k_i \;\longrightarrow\; \frac{k_i}{\sqrt{\sum_j k_j^2}},
+              \label{eq:kernel_l2}
+          \end{equation}
+          en vez de $k_i \to k_i / \sum_j k_j$.
+\end{itemize}
+
+Con esta normalización, convolucionar ruido de desviación
+$\sigma_{\mathrm{beam}}$ con el kernel produce una imagen de ruido
+correlacionado cuya desviación final es, de nuevo, $\sigma_{\mathrm{beam}}$
+-- consistente con que cada píxel ya representa Jy/beam. Verificado
+numéricamente antes de aplicar el cambio:
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+& \textbf{Antes (bug)} & \textbf{Después (corregido)} \\
+\midrule
+$\sigma$ tras convolución (ngVLA-A) & $6.9\times10^{-13}$\,Jy & $2.844\times10^{-8}$\,Jy \\
+Valor teórico & \multicolumn{2}{c}{$2.844\times10^{-8}$\,Jy} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Tras corregir y regenerar las imágenes, el RMS medido quedó entre
+$0.7\times$ y $1.0\times$ el valor teórico -- el rango esperado, ya que cada
+imagen es una única realización aleatoria del ruido, no un promedio
+infinito de muchas.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{¿Por qué aparecen más contornos a redshift alto?}
+% ════════════════════════════════════════════════════════════════════════════
+
+Al comparar los collages se observó que a $z=0.4$ casi no hay contornos
+(cero o uno), mientras que a $z=3.0$--$5.0$ aparecen varios. Se verificó
+contando "blobs" (regiones conectadas sobre $3\sigma$) promediando las 14
+galaxias disponibles:
+
+\begin{center}
+\begin{tabular}{cccc}
+\toprule
+$z$ & \textbf{SFR asignado} & \textbf{Blobs promedio} & \textbf{Área $>3\sigma$} \\
+    & [$M_\odot$/yr] & (ngVLA-A) & \\
+\midrule
+0.4 & 1.5  & 1.8 & 0.100\% \\
+1.0 & 7    & 1.1 & 0.110\% \\
+2.0 & 40   & 0.8 & 0.105\% \\
+3.0 & 100  & 1.2 & 0.189\% \\
+5.0 & 300  & 2.3 & 0.182\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+La tendencia es real y se explica por dos efectos combinados:
+
+\subsection{1. La tabla de SFR hace la galaxia intrínsecamente más luminosa a alto \texorpdfstring{$z$}{z}}
+
+La tabla de redshift--SFR (\texttt{SINGS/utils.py}, basada en
+Leslie et al.\ 2020 para $M_\star = 10^{10}\,M_\odot$) no es arbitraria:
+representa el SFR \textit{típico} de una galaxia de masa fija en la
+Secuencia Principal de formación estelar en cada época. Esa secuencia sube
+fuertemente con $z$ -- el universo joven formaba estrellas mucho más rápido.
+Como la luminosidad radio es directamente proporcional al SFR
+($L = \mathrm{SFR}/4.87\times10^{-29}$), a $z=5$ la fuente es
+\textbf{$\sim$200 veces} más luminosa intrínsecamente que a $z=0.4$.
+
+\subsection{2. Esa ganancia compite con el oscurecimiento por distancia, y casi lo compensa}
+
+Alejar la fuente reduce el flujo observado como $\sim 1/D_L^2$, y la
+distancia de luminosidad $D_L$ crece muchísimo con $z$. Sin embargo, al medir
+el flujo total (sin ruido) de una misma galaxia (NGC\,628) en los cinco
+redshifts, el resultado es sorprendentemente parecido en todos los casos:
+
+\begin{center}
+\begin{tabular}{cc}
+\toprule
+$z$ & \textbf{Flujo total} [Jy] \\
+\midrule
+0.4 & $1.52\times10^{-6}$ \\
+1.0 & $8.56\times10^{-7}$ \\
+2.0 & $9.98\times10^{-7}$ \\
+3.0 & $1.02\times10^{-6}$ \\
+5.0 & $1.02\times10^{-6}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Es decir: la tabla está construida de forma que el aumento de SFR compensa
+\textit{aproximadamente} el oscurecimiento cosmológico -- pero no
+exactamente. Además, el \textbf{ruido del instrumento no depende de $z$}
+(28.44\,nJy/beam para ngVLA-A, siempre el mismo, sin importar qué tan lejos
+esté la fuente). Entonces, si el flujo se mantiene similar o sube levemente
+con $z$ mientras el ruido queda fijo, la relación señal/ruido mejora
+ligeramente hacia $z$ alto, y más píxeles cruzan el umbral fijo de
+$3\sigma$.
+
+\subsection{En resumen}
+
+A $z=0.4$ la galaxia es intrínsecamente muy débil en radio (SFR $=1.5\,
+M_\odot$/yr es poco), así que aunque está cerca, casi no hay señal por
+encima del ruido. A $z$ alto, aunque está mucho más lejos, se le asignó un
+SFR mucho mayor -- como corresponde a una galaxia típica de esa época -- y
+esa ganancia de luminosidad gana la carrera contra la distancia. Por eso se
+ven más contornos (más detecciones) hacia redshift alto.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Resumen de cambios aplicados al pipeline}
+% ════════════════════════════════════════════════════════════════════════════
+
+\begin{enumerate}
+    \item \textbf{Corrección del bug de ruido} en \texttt{add\_correlated\_noise}
+          (los cuatro scripts de telescopio en \texttt{SINGS/}): generación
+          directa del ruido blanco con $\mathrm{std}=\sigma_{\mathrm{beam}}$
+          y normalización $L_2$ del kernel gaussiano.
+    \item \textbf{\texttt{collage.py}}: se agregó \texttt{estimate\_rms()}
+          (sigma-clipping) y la anotación de RMS medido vs.\ teórico bajo
+          cada panel de telescopio.
+    \item Los cuatro paneles de telescopio se redibujan con
+          \texttt{aplpy.FITSFigure}, incluyendo contornos WCS-aware
+          (\texttt{show\_contour}) desde $3\sigma$, y el beam real leído del
+          header FITS (\texttt{add\_beam}).
+    \item Color del contorno cambiado de blanco a cian
+          (\texttt{\#00ffcc}) para que contraste con los mapas de color
+          \texttt{plasma} y \texttt{hot}, que terminan en blanco/amarillo
+          pálido justo donde caen los picos de $3\sigma$.
+    \item El panel de "Mapa radio" (SFR sin instrumento, antes de la
+          convolución con el beam) se dejó \textbf{sin contorno}: ese mapa
+          tiene ruido pixel a pixel sin suavizar y un posible gradiente de
+          fondo heredado del H$\alpha$ de entrada, por lo que un contorno de
+          silueta limpio requeriría trabajo adicional de suavizado y
+          caracterización del fondo -- un problema de calidad de datos
+          aparte del propósito original de esta tarea.
+\end{enumerate}
+
+\end{document}
