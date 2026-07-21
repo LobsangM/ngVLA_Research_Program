@@ -10,6 +10,7 @@ import matplotlib.gridspec as gridspec
 from matplotlib.patches import Ellipse
 from matplotlib.colors import Normalize
 from astropy.io import fits
+from astropy.stats import sigma_clipped_stats
 from astropy.visualization import ZScaleInterval
 
 BASE_DIR = Path(__file__).parent
@@ -118,8 +119,9 @@ def sfr_tag(sfr):
 # Collage
 
 def draw_panel(ax, data, norm, cmap, title="", unit="",
-               title_color=WHITE, beam_px=None, note=None, aspect="auto"):
-    
+               title_color=WHITE, beam_px=None, note=None, aspect="auto",
+               contour=False):
+
     ax.set_facecolor(PANEL_BG)
     ax.set_xticks([])
     ax.set_yticks([])
@@ -136,6 +138,19 @@ def draw_panel(ax, data, norm, cmap, title="", unit="",
         cb.ax.yaxis.label.set_color(GRAY_TEXT)
         if unit:
             cb.set_label(unit, fontsize=5, color=GRAY_TEXT)
+
+        # Contorno de detección: RMS por sigma-clipping (descarta la propia
+        # fuente para no sesgar el fondo hacia arriba) y contornos a
+        # 3/5/10/20 sigma, mismo criterio y color que plot_with_beam() en
+        # los scripts de telescopio. Sin reproyección WCS acá (imshow plano
+        # en pixeles), así que ax.contour() sobre el mismo array basta -- se
+        # alinea exacto con la imagen sin necesidad de aplpy. Ver README.md
+        # "Contornos de detección (3 sigma)".
+        if contour:
+            _, _, rms = sigma_clipped_stats(d, sigma=3.0, maxiters=5)
+            levels = [lvl for lvl in (3*rms, 5*rms, 10*rms, 20*rms) if d.max() > lvl]
+            if levels:
+                ax.contour(d, levels=levels, colors="#00ffcc", linewidths=0.7)
 
         # Elipse del beam (esquina inferior izquierda)
         if beam_px and beam_px > 0:
@@ -274,6 +289,7 @@ def make_collage(galaxy):
                 unit="Jy/beam",
                 title_color=zc,
                 beam_px=bpx,
+                contour=True,
             )
 
     

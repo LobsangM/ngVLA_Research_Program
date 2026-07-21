@@ -28,6 +28,21 @@ REDSHIFT_SFR_TABLE = [
     {"redshift": 5.0, "sfr": 300, "label": "z5.0"},
 ]
 
+# Estrellas de campo mal sustraídas en el FITS Hα crudo de SINGS DR4 (residuo
+# dipolar: pico positivo muy intenso pegado a un pozo negativo, en imágenes
+# de continuo restado). No son formación estelar real: si no se enmascaran,
+# dominan la normalización de SFR y aparecen como una fuente compacta falsa
+# tras la convolución del beam, más brillante que la galaxia real. Ver
+# README.md "Máscaras manuales de estrellas mal sustraídas". Coordenadas en
+# el sistema de la imagen ORIGINAL (sin recortar), (x=columna, y=fila, radio
+# en píxeles nativos), encontradas por inspección del pico de flujo dentro
+# del recorte y su perfil radial.
+STAR_MASKS = {
+    "ngc3627": [(1403, 1531, 15)],
+    "ngc4594": [(1724, 852, 35)],
+    "ngc5055": [(1601, 1218, 45)],
+}
+
 
 def get_config(galaxia, redshift=1.0, sfr=7, label="z1.0"):
     fits_file = str(BASE_DIR / "imagenes_Ha" / f"{galaxia}{sufijo}")
@@ -40,7 +55,8 @@ def get_config(galaxia, redshift=1.0, sfr=7, label="z1.0"):
         "image": {
             "fits_file": fits_file,
             "crop_size": 30,
-            "crop_fraction": 0.7
+            "crop_fraction": 0.7,
+            "star_masks": STAR_MASKS.get(galaxia, [])
         },
         "sfr": {
             "total_sfr": sfr

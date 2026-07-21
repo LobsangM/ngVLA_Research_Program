@@ -48,9 +48,31 @@ class SFRRadioModel:
         data = hdul[0].data
         self.original_header = hdul[0].header
 
+        data = self._mask_known_artifacts(data)
         self.image = self._crop_to_galaxy(data, self.original_header)
 
         print("Imagen cargada con shape:", self.image.shape)
+
+    # -------------------------------------------------
+    def _mask_known_artifacts(self, data):
+        # Estrellas de campo mal sustraídas (residuo dipolar) en el FITS Hα
+        # crudo, identificadas manualmente por galaxia. Se ponen a cero ANTES
+        # del recorte para que no contaminen la normalización de SFR ni
+        # aparezcan como fuente compacta falsa tras la convolución del beam.
+        # Ver README.md "Máscaras manuales de estrellas mal sustraídas".
+        masks = self.config["image"].get("star_masks", [])
+        if not masks:
+            return data
+
+        data = data.copy()
+        ny, nx = data.shape
+        yy, xx = np.ogrid[:ny, :nx]
+        for mask_x, mask_y, radius in masks:
+            circle = (xx - mask_x) ** 2 + (yy - mask_y) ** 2 <= radius ** 2
+            data[circle] = 0
+            print(f"Máscara aplicada en (x={mask_x}, y={mask_y}, r={radius}px)")
+
+        return data
 
     # -------------------------------------------------
     def _crop_to_galaxy(self, data, header):
