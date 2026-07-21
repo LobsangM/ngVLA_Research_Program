@@ -24,7 +24,8 @@ config = {
 
     "image": {
         "fits_file": "ngc6946Ha_I_Ha_ksb2004.fits",
-        "crop_size": 30 #probar con 30kpc
+        "crop_size": 30, #probar con 30kpc
+        "crop_fraction": 0.7
     },
 
     "radio": {
@@ -79,19 +80,56 @@ class SFRRadioModel:
         file = self.config["image"]["fits_file"]
 
         hdul = fits.open(file)
-        self.image = hdul[0].data
+        data = hdul[0].data
         self.original_header = hdul[0].header
 
+        self.image = self._crop_to_galaxy(data, self.original_header)
+
         print("Imagen cargada con shape:", self.image.shape)
+
+    # -------------------------------------------------
+    def _crop_to_galaxy(self, data, header):
+        # Recorta al núcleo real (OBJCTX/OBJCTY del header SINGS) en vez de
+        # usar el frame nativo completo. Sin esto, artefactos de borde
+        # (rayos cósmicos, estrellas mal sustraídas, gradientes de cielo)
+        # se suman al total y dominan el SFR normalizado. Ver README.md
+        # sección "Recorte centrado en el núcleo real".
+        ny, nx = data.shape
+        frac = self.config["image"].get("crop_fraction", 0.7)
+
+        obj_x, obj_y = header.get("OBJCTX"), header.get("OBJCTY")
+        try:
+            obj_x, obj_y = float(obj_x), float(obj_y)
+            valid = 0 <= obj_x <= nx and 0 <= obj_y <= ny
+        except (TypeError, ValueError):
+            valid = False
+
+        cx, cy = (obj_x, obj_y) if valid else (nx / 2.0, ny / 2.0)
+        origen = "OBJCTX/OBJCTY" if valid else "centro geométrico (sin OBJCTX/OBJCTY válido)"
+
+        half = int(min(nx, ny) * frac / 2.0)
+        x0, x1 = int(np.clip(cx - half, 0, nx)), int(np.clip(cx + half, 0, nx))
+        y0, y1 = int(np.clip(cy - half, 0, ny)), int(np.clip(cy + half, 0, ny))
+
+        print(f"Recorte centrado en ({cx:.1f}, {cy:.1f}) [{origen}]: filas {y0}:{y1}, columnas {x0}:{x1}")
+
+        return data[y0:y1, x0:x1]
 
     # -------------------------------------------------
     def _scale_sfr(self):
 
         total_sfr_target = self.config["sfr"]["total_sfr"]
 
-        scaling_factor = total_sfr_target / np.sum(self.image)
+        # Solo el flujo positivo es Hα real; los píxeles negativos vienen de
+        # una resta de continuo imperfecta y no representan "SFR negativo".
+        # Si se normaliza con la suma cruda (incluye negativos), en imágenes
+        # donde el fondo negativo domina (ver README.md "Normalización con
+        # flujo positivo") el factor de escala se invierte y todo el mapa
+        # queda con el signo al revés.
+        positive_flux = np.clip(self.image, 0, None)
+        scaling_factor = total_sfr_target / np.sum(positive_flux)
 
-        self.SFR_map = scaling_factor * self.image
+        self.SFR_map = scaling_factor * positive_flux
         self.SFR_map_log = np.log10(1 + self.SFR_map)
 
         print("SFR total final: %.2f Msun/yr" % np.sum(self.SFR_map))

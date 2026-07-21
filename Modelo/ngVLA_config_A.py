@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from astropy.io import fits
+from astropy.stats import sigma_clipped_stats
 from scipy.signal import fftconvolve
 import copy
 import matplotlib.pyplot as plt
@@ -146,6 +147,26 @@ def plot_with_beam(fits_file):
     f.beam.set_facecolor("none")
 
     f.beam.set_linewidth(2)
+
+    # Contorno de detección: RMS estimado con sigma-clipping (descarta la
+    # fuente para no sesgar el fondo hacia arriba) y contornos a 3/5/10/20
+    # sigma. Distingue emisión real de picos de ruido correlacionado que se
+    # ven "calientes" por el mapa de color sin superar el umbral estadístico.
+    # Ver README.md "Contornos de detección (3 sigma)".
+    data = fits.getdata(fits_file)
+    _, _, rms = sigma_clipped_stats(data, sigma=3.0, maxiters=5)
+    # show_contour falla si un nivel no tiene ningún pixel por encima (el
+    # WCS transform de matplotlib no admite un contorno vacío) - se filtran
+    # los niveles que la imagen realmente alcanza antes de dibujar.
+    levels = [lvl for lvl in (3*rms, 5*rms, 10*rms, 20*rms) if data.max() > lvl]
+    if levels:
+        f.show_contour(
+            fits_file,
+            levels=levels,
+            colors="#00ffcc",
+            linewidths=1.2
+        )
+    print("RMS estimado (sigma-clipped):", rms, "Jy/beam")
 
     # figura limpia
     f.axis_labels.hide()
