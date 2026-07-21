@@ -39,7 +39,8 @@ def get_config(galaxia, redshift=1.0, sfr=7, label="z1.0"):
         },
         "image": {
             "fits_file": fits_file,
-            "crop_size": 30
+            "crop_size": 30,
+            "crop_fraction": 0.7
         },
         "sfr": {
             "total_sfr": sfr
