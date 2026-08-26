@@ -11,6 +11,7 @@ Pipeline de simulación en radioastronomía que predice cómo se verían galaxia
 - [Física del modelo](#física-del-modelo)
 - [Configuraciones de telescopio](#configuraciones-de-telescopio)
 - [Tabla z × SFR](#tabla-z--sfr)
+- [SINGS_1_4GHz — variante a banda L (1.4 GHz)](#sings_1_4ghz--variante-a-banda-l-14-ghz)
 - [Notas y problemas conocidos](#notas-y-problemas-conocidos)
 
 ## Requisitos y entorno
@@ -50,6 +51,15 @@ ResearchP_ngVLA/
     ├── VLA_config_B/{z}/           # Salida: VLA_B_{galaxia}_noise.fits + .png
     ├── collage/                    # Salida de collage.py: {galaxia}.png
     └── Convoluciones/              # Imágenes convolucionadas: convolucion_{beam}_{galaxia}.fits
+└── SINGS_1_4GHz/                    # Variante de SINGS/ a banda L (1.4 GHz) — ver sección dedicada
+    ├── SRF_MODEL_CASA.py           # idéntico a SINGS/SRF_MODEL_CASA.py
+    ├── utils.py                    # obs_frequency=1.4GHz; NOISE_CONFIG y beams recalculados
+    ├── main.py                     # orquestador + flag --clean; sin VLA_config_B ni preview_Ha
+    ├── collage.py                  # igual a SINGS/, sin panel VLA-B
+    ├── tomls/, imagenes_Ha/        # iguales a SINGS/
+    ├── resultados/{z}/{galaxia}/   # mapas de flujo (igual a SINGS/)
+    ├── Resultados/{config}/{z}/    # salida de telescopio: ngVLA_config_A, ngVLA_config_B, VLA_config_A
+    └── collage/                    # Salida de collage.py: {galaxia}.png
 ```
 
 ## Cómo ejecutar el pipeline
@@ -81,6 +91,14 @@ python VLA_config_A.py          # paso 2c: convolución + ruido, config VLA-A
 python VLA_config_B.py          # paso 2d: convolución + ruido, config VLA-B
 python collage.py               # opcional: collage PNG por galaxia (con RMS + contornos 3σ)
 python preview_Ha.py            # opcional: previews PNG de las imágenes Hα crudas
+```
+
+### Pipeline en lote SINGS a banda L (`SINGS_1_4GHz/`)
+
+```bash
+cd SINGS_1_4GHz
+python main.py                  # orquestador: SRF_MODEL_CASA.py + ngVLA_config_{A,B}.py + VLA_config_A.py + collage.py
+python main.py --clean          # solo limpia artefactos de CASA (logs/temp), no corre el pipeline
 ```
 
 ### Rebinning de imágenes CASA (dentro del entorno CASA)
@@ -262,10 +280,43 @@ Definida en `SINGS/utils.py` como `REDSHIFT_SFR_TABLE`, basada en Leslie et al. 
 
 Esta tabla no es arbitraria: registra la SFR típica de secuencia principal a masa estelar fija en cada época, por lo que los bins a mayor z son intrínsecamente mucho más luminosos. Esa ganancia de luminosidad compensa aproximadamente (pero no exactamente) el atenuamiento cosmológico, razón por la cual el flujo integrado total se mantiene en el mismo orden de magnitud a través de los cinco redshifts para una galaxia dada.
 
+## SINGS_1_4GHz — variante a banda L (1.4 GHz)
+
+`SINGS_1_4GHz/` es una copia derivada de `SINGS/` (mismo `SRF_MODEL_CASA.py`, misma lógica de recorte a galaxia/máscaras de estrellas/normalización con flujo positivo — ver secciones anteriores, aplican igual aquí) que reconfigura el pipeline para simular observación directa en banda L (1.4 GHz) en vez de banda ngVLA (10 GHz), con beams y niveles de ruido recalculados a partir de los exposure time calculators de ngVLA (ngECT) y VLA (VLA ETC) para esa frecuencia.
+
+### Cambio de frecuencia de observación
+
+En `utils.py`, `obs_frequency` pasa de 10 GHz (banda ngVLA, valor usado en `SINGS/`) a **1.4 GHz**, igual al `rest_frequency` (1.4 GHz, la línea de radio-continuo asociada a SFR). Como `luminosity_to_flux` pondera por `(ν_rest/ν_obs)^(-α)`, al hacer `obs_frequency = rest_frequency` este término queda en 1 — se simula observar directamente en la frecuencia de reposo en vez de cruzar de banda (10 GHz observada ← 1.4 GHz en reposo) como hace `SINGS/`. El resto de `get_config()` (`crop_size=30`, `crop_fraction=0.7`, `STAR_MASKS`, `REDSHIFT_SFR_TABLE`) es idéntico a `SINGS/`.
+
+### Beams y ruido recalculados a 1.4 GHz
+
+| Config    | Beam (arcsec) | Ruido          | Subarray / fuente |
+|-----------|---------------|----------------|--------------------|
+| ngVLA-A   | 0.99          | 62.41 nJy/beam | ngECT: Mid+Spiral+OuterCore |
+| ngVLA-B   | 1.24          | 45.75 nJy/beam | ngECT: Main |
+| VLA-A     | 2.093         | 1.99 µJy/beam  | VLA ETC |
+| VLA-B     | 6.864         | 1.99 µJy/beam  | VLA ETC (deshabilitada, ver abajo) |
+
+Frente a los valores a 10 GHz de `SINGS/` (tabla en ["Configuraciones de telescopio"](#configuraciones-de-telescopio)), los beams a 1.4 GHz son mucho más anchos (peor resolución angular a frecuencia más baja) y el ruido ngVLA sube (~2× en A, ~1.4× en B).
+
+**Subarray Core de ngVLA descartado**: su beam sintetizado a 1.4 GHz (21.55″) supera por completo el FOV de la imagen recortada (`crop_size=30`, `crop_fraction=0.7`) a cualquier z simulado — `imsmooth` se cuelga con un padding de FFT gigantesco y el resultado no sería físicamente interpretable de todas formas. Se usa en su lugar el subarray "Mid+Spiral+OuterCore" para ngVLA-A.
+
+**VLA-B deshabilitada por el mismo motivo**: su beam a 1.4 GHz (6.864″, elongado hasta 24.024″ en `BMAJ`) también supera el FOV recortado. Se comentó (no se borró) en `main.py` (lista `scripts`) y en `collage.py` (`CONFIGS`), dejando la config lista para reactivar si se ajusta `crop_size`/`crop_fraction` o se usa un beam distinto.
+
+### Cambios de robustez frente a beams anchos (`ngVLA_config_B.py`)
+
+- **Kernel de ruido acotado**: `kernel_size` pasa de `int(6 * sigma_kernel_pix)` a `min(int(6 * sigma_kernel_pix), data.shape[0] // 2)`. Sin el tope, un beam ancho combinado con un pixel scale nativo fino puede pedir un kernel de decenas de miles de píxeles por lado (varios GB) y colgar `fftconvolve`. La renormalización L2 del kernel (`kernel /= sqrt(sum(kernel**2))`) mantiene `std ≈ sigma_beam` aunque el kernel quede truncado.
+- **`show_contour` protegido con `try/except ValueError`**: el filtro ya existente en `SINGS/` (`data.max() > lvl`) garantiza que algún píxel alcanza el nivel, pero no que ese nivel forme un contorno cerrado trazable — un pico aislado de 1-2 píxeles puede producir un path vacío y tumbar `WCSAxes` con `ValueError: Expected 2 world coordinates, got 0`. En `SINGS_1_4GHz/ngVLA_config_B.py` este caso se captura y se omite ese contorno puntual en vez de abortar toda la corrida.
+
+### `main.py`: flag `--clean`
+
+`python main.py --clean` corre solo `clean_casa_artifacts()` sin ejecutar el pipeline — útil para limpiar después de una corrida interrumpida o colgada (p. ej. por el problema de FOV descrito arriba, antes de que se descartaran Core y VLA-B). El script no tiene guard `if __name__ == "__main__"` a propósito: también se lanza vía `execfile()` dentro del shell de CASA, donde `__name__` no vale `"__main__"`. La secuencia tampoco incluye `preview_Ha.py` (no existe copia de ese script en este directorio).
+
 ## Notas y problemas conocidos
 
 - **Directorios temporales de CASA**: `SRF_MODEL_CASA.py` y los scripts de telescopio dejan directorios `temp_{z}.image` y `temp_{z}_smooth.image`. Son seguros de borrar después de una corrida.
 - **Unidades de ruido distintas**: las configs ngVLA pasan el ruido en **nJy** (`noise_nJy * 1e-9`) mientras que las configs VLA lo pasan en **µJy** (`noise_uJy * 1e-6`). Las firmas de `add_correlated_noise` difieren en consecuencia — no son intercambiables aunque se vean idénticas.
 - **14 vs 52 galaxias**: `Ha_SUB.toml` lista 52 galaxias, pero `galaxias` en `utils.py` se filtra al cargar a solo las que tienen un FITS coincidente en `imagenes_Ha/` — actualmente 14.
 - **`mapas_SFR100/` y `Convoluciones/`**: escritos por `save_flux_to_fits()` y `casa_convolution()` respectivamente, pero estos métodos no se llaman en el bucle principal actual (`__main__` solo llama a `add_wcs_and_save()`). Esos directorios son intermedios de versiones anteriores del pipeline.
-- **Duplicación de código**: `add_correlated_noise` y `plot_with_beam` están copiados literalmente en los cuatro scripts de telescopio de `Modelo/` y los cuatro de `SINGS/`. Cambios al modelo de ruido o al estilo de gráfico deben aplicarse en los ocho archivos.
+- **Duplicación de código**: `add_correlated_noise` y `plot_with_beam` están copiados literalmente en los cuatro scripts de telescopio de `Modelo/` y los cuatro de `SINGS/` (y de nuevo en los tres activos de `SINGS_1_4GHz/`). Cambios al modelo de ruido o al estilo de gráfico deben aplicarse en todas las copias.
+- **`SINGS_1_4GHz/` no incluye VLA-B ni preview_Ha.py**: ver [sección dedicada](#sings_1_4ghz--variante-a-banda-l-14-ghz) — su beam a 1.4 GHz excede el FOV de la imagen recortada.
