@@ -10,7 +10,9 @@ Pipeline de simulación en radioastronomía que predice cómo se verían galaxia
 - [Arquitectura del procesamiento](#arquitectura-del-procesamiento)
 - [Física del modelo](#física-del-modelo)
 - [Configuraciones de telescopio](#configuraciones-de-telescopio)
+- [RMS medido vs. teórico](#rms-medido-vs-teórico)
 - [Tabla z × SFR](#tabla-z--sfr)
+- [Propiedades físicas de las galaxias SINGS](#propiedades-físicas-de-las-galaxias-sings)
 - [SINGS_1_4GHz — variante a banda L (1.4 GHz)](#sings_1_4ghz--variante-a-banda-l-14-ghz)
 - [Notas y problemas conocidos](#notas-y-problemas-conocidos)
 
@@ -266,6 +268,31 @@ Esto solo se aplicó a los paneles de telescopio (imágenes ya convolucionadas c
 | VLA-A     | 0.293         | 0.56 µJy/beam  |
 | VLA-B     | 0.961         | 0.56 µJy/beam  |
 
+## RMS medido vs. teórico
+
+Los valores de ruido de la tabla anterior son el parámetro de entrada (`noise_nJy`/`noise_uJy`) que `add_correlated_noise` usa para generar el ruido correlacionado — no están medidos sobre la salida real del pipeline. La tabla siguiente sí lo está: se corrió `astropy.stats.sigma_clipped_stats(data, sigma=3.0, maxiters=5)` sobre los 70 archivos `_noise.fits` de cada config (`SINGS/Resultados/{config}/{z}/*_noise.fits`, 14 galaxias × 5 redshifts, banda ngVLA de 10 GHz), y se agregaron media ± desviación estándar sobre los 70:
+
+| Config    | Beam (arcsec) | RMS teórico    | RMS medido (media ± std, n=70) | Desviación |
+|-----------|---------------|----------------|----------------------------------|------------|
+| ngVLA-A   | 0.293         | 28.44 nJy/beam | 27.77 ± 1.98 nJy/beam           | −2.4 %     |
+| ngVLA-B   | 0.961         | 32.68 nJy/beam | 44.13 ± 11.20 nJy/beam          | +35.0 %    |
+| VLA-A     | 0.293         | 0.56 µJy/beam  | 0.544 ± 0.031 µJy/beam           | −2.9 %     |
+| VLA-B     | 0.961         | 0.56 µJy/beam  | 0.486 ± 0.089 µJy/beam           | −13.2 %    |
+
+Las configs de beam angosto (A) reproducen el ruido teórico dentro de ~3%, con dispersión pequeña y sin dependencia notable de z. Las configs de beam ancho (B) sobre/subestiman el teórico por 13-35% y con mucha más dispersión (std ~25-30% de la media). Desglosando por z se ve que esta dispersión no es ruido de muestreo sino que sería sistemática:
+
+| z    | ngVLA-B media (nJy) | ngVLA-B std | VLA-B media (µJy) | VLA-B std |
+|------|----------------------|-------------|---------------------|-----------|
+| 0.4  | 40.1                 | 7.1         | 0.503               | 0.046     |
+| 1.0  | 42.7                 | 12.6        | 0.500               | 0.126     |
+| 2.0  | 48.0                 | 11.3        | 0.485               | 0.102     |
+| 3.0  | 49.9                 | 12.2        | 0.470               | 0.080     |
+| 5.0  | 40.0                 | 7.7         | 0.472               | 0.065     |
+
+El pico de desviación (y de dispersión) cae en z≈2-3, no en los extremos — consistente con que `pixel_arcsec` (derivado de la distancia angular de diámetro, que en ΛCDM tiene un máximo cerca de z~1.5-2 y decrece después) determina `sigma_kernel_pix` y por lo tanto `kernel_size = int(6 * sigma_kernel_pix)` en `add_correlated_noise` (ver ["Conversión de unidades crítica"](#conversión-de-unidades-crítica-en-add_correlated_noise-jypíxel--jybeam) más arriba). Un beam ancho (config B) ya de por sí pide un kernel más grande en píxeles que uno angosto (A); en el rango de z donde ese kernel es más grande todavía, la renormalización L2 sobre una grilla discreta y finita se aleja más de su límite continuo, lo cual es consistente con el patrón observado (A, con kernel siempre pequeño, prácticamente no se mueve con z). No se filtró explícitamente esta hipótesis inspeccionando `sigma_kernel_pix` por z — queda como explicación plausible a partir del código y la física del pipeline, no como algo verificado línea por línea.
+
+Esta tabla cubre únicamente `SINGS/` (banda ngVLA de 10 GHz); no se generó el equivalente para `SINGS_1_4GHz/` ni para `Modelo/`.
+
 ## Tabla z × SFR
 
 Definida en `SINGS/utils.py` como `REDSHIFT_SFR_TABLE`, basada en Leslie et al. 2020 (M★ = 10¹⁰ M☉):
@@ -279,6 +306,22 @@ Definida en `SINGS/utils.py` como `REDSHIFT_SFR_TABLE`, basada en Leslie et al. 
 | z5.0  | 5.0 | 300          |
 
 Esta tabla no es arbitraria: registra la SFR típica de secuencia principal a masa estelar fija en cada época, por lo que los bins a mayor z son intrínsecamente mucho más luminosos. Esa ganancia de luminosidad compensa aproximadamente (pero no exactamente) el atenuamiento cosmológico, razón por la cual el flujo integrado total se mantiene en el mismo orden de magnitud a través de los cinco redshifts para una galaxia dada.
+
+## Propiedades físicas de las galaxias SINGS
+
+De las 14 galaxias de `SINGS/`, 9 (ngc0628, ngc1097, ngc3034, ngc3184, ngc3521, ngc3627, ngc3938, ngc4254, ngc4321) tienen su Distancia/SFR/log(M★) verificadas contra Kennicutt et al. (2003, PASP, 115, 928 — Tabla 1 del artículo original de SINGS); esos valores no están documentados en este repositorio. Las 5 restantes no estaban verificadas; la tabla siguiente cubre esas 5.
+
+| Galaxia  | Distancia (Mpc) | Método    | SFR (M☉/año) | log(M★/M☉) | Fuente |
+|----------|------------------|-----------|----------------|--------------|--------|
+| NGC 4536 | 14.5             | Cepheidas | 2.17           | 9.44         | Kennicutt et al. (2011), Tabla 1 |
+| NGC 4594 | 9.08             | SBF       | 0.18           | 11.03        | Kennicutt et al. (2011), Tabla 1 |
+| NGC 5055 | 7.94             | TF (flow-corrected) | 1.04 | 10.55        | Kennicutt et al. (2011), Tabla 1 |
+| NGC 5194 | 8.0              | adoptada (THINGS, i=20°) | 3.125 | 10.6   | Leroy et al. (2008), Tabla 4 |
+| NGC 7331 | 14.5             | Cepheidas | 2.74           | 10.56        | Kennicutt et al. (2011), Tabla 1 |
+
+**Importante — esto no es una verificación contra Kennicutt et al. (2003)**: ese artículo (PASP, 115, 928) es de acceso pago y sin preprint en arXiv, y no se pudo extraer su Tabla 1 con las herramientas disponibles en esta sesión. En su lugar se usó Kennicutt et al. (2011, PASP, 123, 1347 — la encuesta KINGFISH, sucesora directa de SINGS con Herschel), cuya Tabla 1 reporta para la misma muestra: distancia redshift-independiente (Cepheidas/TRGB/SBF/Tully-Fisher según disponibilidad, en orden decreciente de preferencia), SFR (Hα+24µm, calibración de Kennicutt et al. 2009) y log(M★) (método multicolor de Zibetti et al. 2009, listado en Skibba et al. 2011, reescalado a la distancia adoptada por KINGFISH). NGC 5194 (M51) **no está** en la muestra KINGFISH (tampoco lo están NGC 3031/M81 ni NGC 3034/M82, excluidas del subconjunto Herschel) — para esa galaxia se usó en su lugar Leroy et al. (2008, THINGS, Tabla 4), que adopta una escala de distancia distinta (8.0 Mpc fijo, no medido con el método de preferencia de KINGFISH) — su fila no es homogénea con las otras 4.
+
+Antes de citar estos 5 valores en el informe, conviene verificarlos contra Kennicutt et al. (2003) igual que las otras 9, ya que la fuente usada aquí (2011) puede diferir en escala de distancia o calibración de SFR/M★ respecto al artículo original de 2003.
 
 ## SINGS_1_4GHz — variante a banda L (1.4 GHz)
 
