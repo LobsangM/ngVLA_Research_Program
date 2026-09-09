@@ -14,6 +14,7 @@ Pipeline de simulación en radioastronomía que predice cómo se verían galaxia
 - [Tabla z × SFR](#tabla-z--sfr)
 - [Propiedades físicas de las galaxias SINGS](#propiedades-físicas-de-las-galaxias-sings)
 - [SINGS_1_4GHz — variante a banda L (1.4 GHz)](#sings_1_4ghz--variante-a-banda-l-14-ghz)
+- [Informe y presentación](#informe-y-presentación)
 - [Notas y problemas conocidos](#notas-y-problemas-conocidos)
 
 ## Requisitos y entorno
@@ -62,6 +63,11 @@ ResearchP_ngVLA/
     ├── resultados/{z}/{galaxia}/   # mapas de flujo (igual a SINGS/)
     ├── Resultados/{config}/{z}/    # salida de telescopio: ngVLA_config_A, ngVLA_config_B, VLA_config_A
     └── collage/                    # Salida de collage.py: {galaxia}.png
+├── informe/                         # Informe de práctica final (LaTeX, compila con main.tex)
+│   ├── main.tex, sections/, referencias.bib
+│   └── images/, SINGS/collage/, SINGS_1_4GHz/collage/  # figuras embebidas en el informe
+└── presentacion/                    # Presentación Beamer para el asesor — ver sección dedicada
+    └── presentacion.tex            # referencia figuras/bibliografía de informe/ vía ../informe/
 ```
 
 ## Cómo ejecutar el pipeline
@@ -371,6 +377,11 @@ Frente a los valores a 10 GHz de `SINGS/` (tabla en ["Configuraciones de telesco
 ### `main.py`: flag `--clean`
 
 `python main.py --clean` corre solo `clean_casa_artifacts()` sin ejecutar el pipeline — útil para limpiar después de una corrida interrumpida o colgada (p. ej. por el problema de FOV descrito arriba, antes de que se descartaran Core y VLA-B). El script no tiene guard `if __name__ == "__main__"` a propósito: también se lanza vía `execfile()` dentro del shell de CASA, donde `__name__` no vale `"__main__"`. La secuencia tampoco incluye `preview_Ha.py` (no existe copia de ese script en este directorio).
+
+## Informe y presentación
+
+- **`informe/`**: informe de práctica final en LaTeX (compila `main.tex`, capítulos en `sections/`, bibliografía en `referencias.bib`). Documenta metodología, control de calidad y resultados con más profundidad que este README.
+- **`presentacion/presentacion.tex`**: presentación Beamer (técnica, resumida) del proyecto, pensada para explicarle el trabajo al asesor. Vive en su propia carpeta en la raíz del repo, como hermana de `informe/`, y reutiliza las figuras (`images/`, `SINGS/collage/`, `SINGS_1_4GHz/collage/`) y la bibliografía (`referencias.bib`) de `informe/` vía rutas relativas `../informe/...` en vez de duplicarlas — **no es standalone**: para compilarla (p. ej. en Overleaf) hay que subir `presentacion/` junto con `informe/`, conservando esa relación de carpetas hermanas, y compilar `presentacion/presentacion.tex`.
 
 ## Notas y problemas conocidos
 
