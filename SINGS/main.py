@@ -10,6 +10,7 @@ scripts = [
     "ngVLA_config_B.py",
     "VLA_config_A.py",
     "VLA_config_B.py",
+    "collage.py",
 ]
 
 base = os.path.dirname(os.path.abspath(__file__))
@@ -37,4 +38,4 @@ for script in scripts:
 
 clean_casa_artifacts(base)
 
-print("\nTodas las simulaciones terminadas.")
+print("\nTodas las simulaciones terminadas y se realizaron los collages.")

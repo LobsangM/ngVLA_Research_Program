@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import aplpy
 from casatasks import importfits, imsmooth, exportfits
 
-from utils import galaxias, REDSHIFT_SFR_TABLE
+from utils import galaxias, REDSHIFT_SFR_TABLE, NOISE_CONFIG
 
 
 # Ruido correlacionado
@@ -191,7 +191,7 @@ def plot_with_beam(fits_file):
 
 # config ngVLA B
 beam      = 0.961
-noise_nJy = 32.68
+noise_nJy = NOISE_CONFIG["ngVLA_B"]
 beam_str  = "%sarcsec" % beam
 
 for entry in REDSHIFT_SFR_TABLE:
@@ -199,7 +199,7 @@ for entry in REDSHIFT_SFR_TABLE:
     sfr   = entry["sfr"]
     label = entry["label"]
 
-    output_dir = os.path.join("ngVLA_config_B", label)
+    output_dir = os.path.join("Resultados", "ngVLA_config_B", label)
     os.makedirs(output_dir, exist_ok=True)
 
     print(f"\n{'='*55}")

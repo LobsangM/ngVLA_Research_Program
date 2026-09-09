@@ -259,6 +259,19 @@ Esto solo se aplicó a los paneles de telescopio (imágenes ya convolucionadas c
 
 **`collage.py`**: se agregó el mismo contorno (3/5/10/20σ, sigma-clipped, cian) a los cuatro paneles de telescopio del grid combinado, vía `ax.contour()` de matplotlib en vez de `aplpy.FITSFigure` — como esos paneles ya son `imshow` plano sin proyección WCS (no hay reproyección de por medio), el contorno se alinea exacto con la imagen sin necesitar aplpy, y se evita reescribir el motor de dibujo compuesto de `collage.py` (grid irregular con `GridSpec` anidado, colorbars y estilos manuales). El panel de "Mapa radio" sigue sin contorno, por la misma razón de arriba.
 
+### Escala de color compartida en collages
+
+Hasta ahora `auto_norm()` normalizaba cada panel de forma independiente (percentil 99.5 de esa sola imagen), así que el mismo color no representaba el mismo flujo entre paneles: una galaxia sin detección real se veía igual de "caliente" que una con una fuente fuerte, porque cada imagen se reescalaba a su propio rango.
+
+**Fix**: se agregó `compute_global_norm()`, que junta los píxeles finitos de un conjunto de FITS y calcula un único `vmin`/`vmax` (percentil 99.5) sobre el total combinado, en vez de uno por imagen. `main()` la usa para precalcular, antes de generar los 14 collages:
+
+- una norma por **config de telescopio** (ngVLA-A, ngVLA-B, VLA-A, VLA-B), sobre las 14 galaxias × 5 z de esa config — comparable entre galaxias y entre z para la misma config;
+- una norma por **z** para la columna "Mapa radio" (SFR pre-instrumento, en Jy), sobre las 14 galaxias de ese z.
+
+ngVLA y VLA siguen sin compartir escala entre sí (unidades distintas, nJy vs µJy, y ruido de fondo ~20x mayor en VLA — forzar una sola escala global habría dejado los paneles VLA prácticamente planos). La columna Hα de entrada no se tocó: sigue normalizada por galaxia (`zscale`), ya que es la imagen de referencia de entrada, no una salida del pipeline a comparar entre configs.
+
+Aplica a `SINGS/collage.py` y `SINGS_1_4GHz/collage.py` (mismo cambio en ambos, código duplicado como el resto de los scripts de telescopio). Como la norma ahora depende de las 14 galaxias en conjunto, `collage.py` ya no se puede correr para una sola galaxia de forma aislada con la misma escala que el resto del lote — `main()` siempre calcula las normas globales primero y genera las 14 imágenes en la misma corrida.
+
 ## Configuraciones de telescopio
 
 | Config    | Beam (arcsec) | Ruido          |

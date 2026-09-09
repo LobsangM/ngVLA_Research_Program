@@ -86,7 +86,7 @@ def read_fits(path):
 
 
 def auto_norm(data, mode="percentile"):
-    
+
     if data is None:
         return Normalize(0, 1)
     v = data[np.isfinite(data)]
@@ -97,6 +97,32 @@ def auto_norm(data, mode="percentile"):
         return Normalize(max(0.0, float(lo)), float(hi))
     else:  # percentile
         hi = float(np.nanpercentile(data, 99.5))
+        return Normalize(0.0, max(hi, 1e-30))
+
+
+def compute_global_norm(paths, mode="percentile"):
+    """Escala de color compartida entre varios FITS: junta los pixeles
+    finitos de todas las imágenes en `paths` y calcula un único vmin/vmax
+    (percentil 99.5, o zscale) sobre el conjunto combinado, en vez de uno
+    por imagen. Así el mismo color representa el mismo flujo en todos los
+    paneles que comparten esa norma (ver README "Escala de color
+    compartida en collages")."""
+    values = []
+    for p in paths:
+        data, _ = read_fits(p)
+        if data is None:
+            continue
+        v = data[np.isfinite(data)]
+        if v.size:
+            values.append(v)
+    if not values:
+        return Normalize(0, 1)
+    allv = np.concatenate(values)
+    if mode == "zscale":
+        lo, hi = ZScaleInterval(contrast=0.25).get_limits(allv)
+        return Normalize(max(0.0, float(lo)), float(hi))
+    else:  # percentile
+        hi = float(np.nanpercentile(allv, 99.5))
         return Normalize(0.0, max(hi, 1e-30))
 
 
@@ -190,7 +216,7 @@ def draw_header_panel(ax, text, color=WHITE):
 
 # Collage por galaxia
 
-def make_collage(galaxy):
+def make_collage(galaxy, config_norms, sfr_norms):
     print(f"  {galaxy} ...", end="", flush=True)
 
     nz = len(REDSHIFT_SFR_TABLE)   # 5 redshifts
@@ -262,7 +288,7 @@ def make_collage(galaxy):
         sfr_file = BASE_DIR / "resultados" / label / galaxy / \
                    f"mapa_{label}_30kpc_SFR{sfr_tag(sfr)}.fits"
         sfr_data, _ = read_fits(sfr_file)
-        sfr_norm = auto_norm(sfr_data)
+        sfr_norm = sfr_norms[label]
 
         draw_panel(
             fig.add_subplot(inner[row, 0]),
@@ -275,11 +301,11 @@ def make_collage(galaxy):
         # 4 configuraciones
         for j, cfg in enumerate(CONFIGS):
             noise_file = (
-                BASE_DIR / cfg["folder"] / label
+                BASE_DIR / "Resultados" / cfg["folder"] / label
                 / f"{cfg['prefix']}_{galaxy}_noise.fits"
             )
             t_data, t_hdr = read_fits(noise_file)
-            t_norm = auto_norm(t_data)
+            t_norm = config_norms[cfg["name"]]
             bpx    = beam_in_pixels(t_hdr)
 
             draw_panel(
@@ -305,8 +331,34 @@ def make_collage(galaxy):
 def main():
     COLLAGE_DIR.mkdir(exist_ok=True)
     print(f"Generando {len(galaxias)} collages en {COLLAGE_DIR}\n")
+
+    # Escala de color compartida: una norma global por config de telescopio
+    # (sobre las 14 galaxias x 5 z de esa config) y una por z para la
+    # columna "Mapa radio" (SFR pre-instrumento, sobre las 14 galaxias) --
+    # en vez de una norma por panel individual. Así el mismo color
+    # significa el mismo flujo al comparar entre galaxias y entre z.
+    print("Calculando escalas de color globales (por config y por z)...")
+    config_norms = {}
+    for cfg in CONFIGS:
+        paths = [
+            BASE_DIR / "Resultados" / cfg["folder"] / rz["label"]
+            / f"{cfg['prefix']}_{galaxy}_noise.fits"
+            for rz in REDSHIFT_SFR_TABLE for galaxy in galaxias
+        ]
+        config_norms[cfg["name"]] = compute_global_norm(paths)
+
+    sfr_norms = {}
+    for rz in REDSHIFT_SFR_TABLE:
+        label, sfr = rz["label"], rz["sfr"]
+        paths = [
+            BASE_DIR / "resultados" / label / galaxy
+            / f"mapa_{label}_30kpc_SFR{sfr_tag(sfr)}.fits"
+            for galaxy in galaxias
+        ]
+        sfr_norms[label] = compute_global_norm(paths)
+
     for galaxy in galaxias:
-        make_collage(galaxy)
+        make_collage(galaxy, config_norms, sfr_norms)
     print(f"\nFinalizado. {len(galaxias)} collages guardados en:\n  {COLLAGE_DIR}/")
 
 

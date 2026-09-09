@@ -43,6 +43,17 @@ STAR_MASKS = {
     "ngc5055": [(1601, 1218, 45)],
 }
 
+# Ruido (RMS) por configuración de telescopio, usado en add_correlated_noise()
+# dentro de cada {ngVLA,VLA}_config_{A,B}.py. Unidades nativas de cada familia:
+# ngVLA en nJy/beam, VLA en uJy/beam. Editar aquí para que los cuatro scripts
+# recojan el cambio.
+NOISE_CONFIG = {
+    "ngVLA_A": 28.44,  # nJy/beam
+    "ngVLA_B": 32.68,  # nJy/beam
+    "VLA_A":   0.56,   # uJy/beam
+    "VLA_B":   0.56,   # uJy/beam
+}
+
 
 def get_config(galaxia, redshift=1.0, sfr=7, label="z1.0"):
     fits_file = str(BASE_DIR / "imagenes_Ha" / f"{galaxia}{sufijo}")
@@ -64,7 +75,7 @@ def get_config(galaxia, redshift=1.0, sfr=7, label="z1.0"):
         "radio": {
             "alpha": 0.7,
             "redshift": redshift,
-            "obs_frequency": 10,
+            "obs_frequency": 10,   #Vamos a probar a 4GHz , luego volvemos a 10GHz
             "rest_frequency": 1.4,
             "beam_major": "0.05arcsec",
             "beam_minor": "0.05arcsec",
