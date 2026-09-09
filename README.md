@@ -67,7 +67,8 @@ ResearchP_ngVLA/
 │   ├── main.tex, sections/, referencias.bib
 │   └── images/, SINGS/collage/, SINGS_1_4GHz/collage/  # figuras embebidas en el informe
 └── presentacion/                    # Presentación Beamer para el asesor — ver sección dedicada
-    └── presentacion.tex            # referencia figuras/bibliografía de informe/ vía ../informe/
+    ├── presentacion.tex            # bibliografía vía ../informe/referencias.bib
+    └── images/                      # copia local de las figuras usadas (no referencia informe/images/ ni collage/)
 ```
 
 ## Cómo ejecutar el pipeline
@@ -381,7 +382,7 @@ Frente a los valores a 10 GHz de `SINGS/` (tabla en ["Configuraciones de telesco
 ## Informe y presentación
 
 - **`informe/`**: informe de práctica final en LaTeX (compila `main.tex`, capítulos en `sections/`, bibliografía en `referencias.bib`). Documenta metodología, control de calidad y resultados con más profundidad que este README.
-- **`presentacion/presentacion.tex`**: presentación Beamer (técnica, resumida) del proyecto, pensada para explicarle el trabajo al asesor. Vive en su propia carpeta en la raíz del repo, como hermana de `informe/`, y reutiliza las figuras (`images/`, `SINGS/collage/`, `SINGS_1_4GHz/collage/`) y la bibliografía (`referencias.bib`) de `informe/` vía rutas relativas `../informe/...` en vez de duplicarlas — **no es standalone**: para compilarla (p. ej. en Overleaf) hay que subir `presentacion/` junto con `informe/`, conservando esa relación de carpetas hermanas, y compilar `presentacion/presentacion.tex`.
+- **`presentacion/presentacion.tex`**: presentación Beamer (técnica, resumida) del proyecto, pensada para explicarle el trabajo al asesor. Vive en su propia carpeta en la raíz del repo, como hermana de `informe/`. Las 6 figuras que usa (`ngVLA.jpg`, `Secuencia_principal_formacion_estelar.jpg`, y los collages de ngc3034/ngc1097/ngc4254, este último en ambas bandas) están copiadas localmente en `presentacion/images/` — no referencian `informe/`. La bibliografía sí sigue siendo la de `informe/referencias.bib`, vía ruta relativa `../informe/referencias` — por lo tanto **no es completamente standalone**: para compilarla (p. ej. en Overleaf) hay que subir `presentacion/` junto con `informe/`, conservando esa relación de carpetas hermanas, y compilar `presentacion/presentacion.tex`.
 
 ## Notas y problemas conocidos
 
