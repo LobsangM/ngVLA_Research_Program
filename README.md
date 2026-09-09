@@ -67,8 +67,10 @@ ResearchP_ngVLA/
 │   ├── main.tex, sections/, referencias.bib
 │   └── images/, SINGS/collage/, SINGS_1_4GHz/collage/  # figuras embebidas en el informe
 └── presentacion/                    # Presentación Beamer para el asesor — ver sección dedicada
-    ├── presentacion.tex            # bibliografía vía ../informe/referencias.bib
-    └── images/                      # copia local de las figuras usadas (no referencia informe/images/ ni collage/)
+    ├── presentacion.tex            # standalone: no referencia informe/
+    ├── referencias.bib             # copia solo de las 10 referencias citadas en presentacion.tex
+    ├── images/                      # copia local de las 6 figuras usadas
+    └── GUIA_PRESENTACION.md         # glosario técnico + guión para explicar la presentación
 ```
 
 ## Cómo ejecutar el pipeline
@@ -382,7 +384,8 @@ Frente a los valores a 10 GHz de `SINGS/` (tabla en ["Configuraciones de telesco
 ## Informe y presentación
 
 - **`informe/`**: informe de práctica final en LaTeX (compila `main.tex`, capítulos en `sections/`, bibliografía en `referencias.bib`). Documenta metodología, control de calidad y resultados con más profundidad que este README.
-- **`presentacion/presentacion.tex`**: presentación Beamer (técnica, resumida) del proyecto, pensada para explicarle el trabajo al asesor. Vive en su propia carpeta en la raíz del repo, como hermana de `informe/`. Las 6 figuras que usa (`ngVLA.jpg`, `Secuencia_principal_formacion_estelar.jpg`, y los collages de ngc3034/ngc1097/ngc4254, este último en ambas bandas) están copiadas localmente en `presentacion/images/` — no referencian `informe/`. La bibliografía sí sigue siendo la de `informe/referencias.bib`, vía ruta relativa `../informe/referencias` — por lo tanto **no es completamente standalone**: para compilarla (p. ej. en Overleaf) hay que subir `presentacion/` junto con `informe/`, conservando esa relación de carpetas hermanas, y compilar `presentacion/presentacion.tex`.
+- **`presentacion/presentacion.tex`**: presentación Beamer (técnica, resumida) del proyecto, pensada para explicarle el trabajo al asesor. Es **standalone**: las 6 figuras que usa (`ngVLA.jpg`, `Secuencia_principal_formacion_estelar.jpg`, y los collages de ngc3034/ngc1097/ngc4254, este último en ambas bandas) están copiadas en `presentacion/images/`, y la bibliografía en `presentacion/referencias.bib` es una copia solo de las 10 referencias efectivamente citadas en `presentacion.tex` (subconjunto de `informe/referencias.bib`, no un enlace a ese archivo) — no depende de `informe/` para compilar, aunque ambas carpetas conviven en la raíz del repo.
+- **`presentacion/GUIA_PRESENTACION.md`**: guía de apoyo (no se compila) con el glosario de términos técnicos que aparecen mencionados pero no definidos a fondo en las diapositivas (resolución angular, sensibilidad al brillo superficial, $\mu$as, espectro sincrotrón, secuencia principal/modelo de Leslie, sSFR, el `n=70` de la tabla de RMS, la columna "Fuente" de las tablas instrumentales, S/N, banda L vs.\ banda ngVLA), un guión sugerido para recorrer la presentación sección por sección, y preguntas probables del asesor con respuestas sugeridas.
 
 ## Notas y problemas conocidos
 
