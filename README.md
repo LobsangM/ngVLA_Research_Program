@@ -297,15 +297,19 @@ Esta tabla cubre únicamente `SINGS/` (banda ngVLA de 10 GHz); no se generó el 
 
 Definida en `SINGS/utils.py` como `REDSHIFT_SFR_TABLE`, basada en Leslie et al. 2020 (M★ = 10¹⁰ M☉):
 
-| Label | z   | SFR (M☉/año) |
-|-------|-----|--------------|
-| z0.4  | 0.4 | 1.5          |
-| z1.0  | 1.0 | 7            |
-| z2.0  | 2.0 | 40           |
-| z3.0  | 3.0 | 100          |
-| z5.0  | 5.0 | 300          |
+| Label | z   | SFR (M☉/año) | Edad del universo (Gyr) |
+|-------|-----|--------------|--------------------------|
+| z0.4  | 0.4 | 1.5          | 9.18                     |
+| z1.0  | 1.0 | 7            | 5.75                     |
+| z2.0  | 2.0 | 40           | 3.22                     |
+| z3.0  | 3.0 | 100          | 2.11                     |
+| z5.0  | 5.0 | 300          | 1.15                     |
+
+Edad calculada con `astropy.cosmology.FlatLambdaCDM(H0=70, Om0=0.3)` — la misma cosmología usada en `_setup_cosmology()` (`SINGS/SRF_MODEL_CASA.py` y `Modelo/sfr_model_CASA.py`) — vía `cosmo.age(z)`.
 
 Esta tabla no es arbitraria: registra la SFR típica de secuencia principal a masa estelar fija en cada época, por lo que los bins a mayor z son intrínsecamente mucho más luminosos. Esa ganancia de luminosidad compensa aproximadamente (pero no exactamente) el atenuamiento cosmológico, razón por la cual el flujo integrado total se mantiene en el mismo orden de magnitud a través de los cinco redshifts para una galaxia dada.
+
+**Justificación de los redshifts elegidos**: usamos valores de z representativos, los cuales cubren el 90% de la historia cósmica del universo. Con la edad actual del universo en ~13.46 Gyr (z=0) y ~1.15 Gyr en z=5.0, este conjunto de redshifts abarca desde épocas relativamente recientes (z=0.4, ~9.18 Gyr, universo con el 68% de su edad actual) hasta el universo temprano (z=5.0, ~1.15 Gyr, apenas el 9% de su edad actual) — es decir, el 91% de la historia cósmica transcurrida hasta hoy.
 
 ## Propiedades físicas de las galaxias SINGS
 
